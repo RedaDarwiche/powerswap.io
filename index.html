@@ -691,6 +691,15 @@
         }
         #emote-toggle-btn.ingame { display: flex; }
         #emote-toggle-btn:hover { transform: translateY(-50%) scale(1.12); border-color: #00f2fe; }
+        #craft-toggle-btn {
+            position: fixed; right: 12px; top: calc(50% + 52px);
+            width: 40px; height: 40px; border-radius: 50%;
+            background: rgba(8,8,18,0.9); border: 2px solid rgba(245,158,11,0.4);
+            font-size: 18px; cursor: pointer; display: none; align-items: center; justify-content: center;
+            z-index: 301; transition: all 0.2s; pointer-events: auto;
+        }
+        #craft-toggle-btn.ingame { display: flex; }
+        #craft-toggle-btn:hover { border-color: #f59e0b; transform: scale(1.12); }
         #emote-hint { position: fixed; right: 8px; bottom: 225px; font-size: 0.58rem; color: rgba(255,255,255,0.28); text-align: center; pointer-events: none; display: none; width: 56px; }
         #emote-hint.ingame { display: block; }
         /* Emote shop in main menu */
@@ -835,16 +844,6 @@
         @keyframes kfSlideIn { from { transform: translateX(20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
         /* ── Crafting ── */
-        #craft-toggle-btn {
-            position: fixed; right: 12px; top: calc(50% + 100px); transform: translateY(-50%);
-            width: 40px; height: 40px; border-radius: 50%;
-            background: rgba(8,8,18,0.9); border: 2px solid rgba(245,158,11,0.4);
-            font-size: 18px; cursor: pointer; display: none; align-items: center; justify-content: center;
-            z-index: 301; transition: all 0.2s; pointer-events: auto;
-        }
-        #craft-toggle-btn.ingame { display: flex; }
-        #craft-toggle-btn:hover { transform: translateY(-50%) scale(1.12); border-color: #f59e0b; }
-
         #craft-modal {
             position: fixed; right: 60px; top: 50%; transform: translateY(-30%);
             z-index: 400; pointer-events: auto; display: none;
@@ -1158,7 +1157,7 @@
     <div id="kill-feed"></div>
 
     <!-- Craft Button (below emote button) -->
-    <button id="craft-toggle-btn" onclick="toggleCraftModal()" title="Crafting">⚗️</button>
+    <button id="craft-toggle-btn" onclick="toggleCraftModal()" title="Crafting"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 3h6v4l2 3v7a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2v-7l2-3V3z" stroke="#f59e0b" stroke-width="1.8" fill="rgba(245,158,11,0.15)" stroke-linejoin="round"/><path d="M7 10h10" stroke="#f59e0b" stroke-width="1.5" stroke-linecap="round"/><circle cx="12" cy="15" r="1.5" fill="#f59e0b"/><path d="M9 3h6" stroke="#f59e0b" stroke-width="1.8" stroke-linecap="round"/></svg></button>
 
     <!-- Craft Modal -->
     <div id="craft-modal" class="glass-panel">
@@ -4018,54 +4017,48 @@
             const mapW = CONFIG.map.width, mapH = CONFIG.map.height;
             const scaleX = W / mapW, scaleY = H / mapH;
             mx.clearRect(0, 0, W, H);
-            // Background grid dots
-            mx.fillStyle = 'rgba(30,41,59,0.95)';
+            // Background
+            mx.fillStyle = 'rgba(10,15,30,0.95)';
             mx.fillRect(0, 0, W, H);
-            mx.fillStyle = 'rgba(255,255,255,0.04)';
+            // Subtle grid
+            mx.fillStyle = 'rgba(255,255,255,0.03)';
             for (let gx = 0; gx < W; gx += 16) for (let gy = 0; gy < H; gy += 16) {
                 mx.fillRect(gx, gy, 1, 1);
             }
             // Map border
-            mx.strokeStyle = 'rgba(0,242,254,0.15)'; mx.lineWidth = 1;
-            mx.strokeRect(1, 1, W-2, H-2);
-            // NPCs
+            mx.strokeStyle = 'rgba(0,242,254,0.2)'; mx.lineWidth = 1;
+            mx.strokeRect(0.5, 0.5, W-1, H-1);
+            // NPCs — small green circles
             for (const nid in state.npcs) {
                 const n = state.npcs[nid];
                 if (!n || (n.hp !== undefined && n.hp <= 0)) continue;
                 mx.fillStyle = '#22c55e';
-                mx.beginPath(); mx.arc(n.x * scaleX, n.y * scaleY, 1.5, 0, Math.PI*2); mx.fill();
+                mx.beginPath(); mx.arc(n.x * scaleX, n.y * scaleY, 2, 0, Math.PI*2); mx.fill();
             }
-            // Bosses
+            // Bosses — red circles with glow
             for (const bid in state.bosses) {
                 const b = state.bosses[bid];
                 if (!b) continue;
-                const bx = (b.targetX||b.x||0)*scaleX, by = (b.targetY||b.y||0)*scaleY;
+                const bx = (b.targetX || b.x || 0) * scaleX;
+                const by = (b.targetY || b.y || 0) * scaleY;
+                mx.shadowBlur = 8; mx.shadowColor = '#ef4444';
                 mx.fillStyle = '#ef4444';
-                mx.shadowBlur = 6; mx.shadowColor = '#ef4444';
                 mx.beginPath(); mx.arc(bx, by, 4, 0, Math.PI*2); mx.fill();
                 mx.shadowBlur = 0;
             }
-            // Other players
+            // Other players — blue circles
             for (const pid in state.players) {
                 const p = state.players[pid];
                 if (!p || p.hp <= 0) continue;
                 mx.fillStyle = '#4facfe';
-                mx.beginPath(); mx.arc(p.x*scaleX, p.y*scaleY, 2.5, 0, Math.PI*2); mx.fill();
+                mx.beginPath(); mx.arc(p.x * scaleX, p.y * scaleY, 3, 0, Math.PI*2); mx.fill();
             }
-            // Me
+            // Me — white circle with cyan glow
             if (state.me && !state.isDead) {
-                const pulse = Math.sin(Date.now()/400)*0.3+0.7;
+                mx.shadowBlur = 10; mx.shadowColor = '#00f2fe';
                 mx.fillStyle = '#ffffff';
-                mx.shadowBlur = 8*pulse; mx.shadowColor = '#00f2fe';
-                mx.beginPath(); mx.arc(state.me.x*scaleX, state.me.y*scaleY, 3.5, 0, Math.PI*2); mx.fill();
+                mx.beginPath(); mx.arc(state.me.x * scaleX, state.me.y * scaleY, 4, 0, Math.PI*2); mx.fill();
                 mx.shadowBlur = 0;
-                // Triangle pointing in my direction
-                mx.save();
-                mx.translate(state.me.x*scaleX, state.me.y*scaleY);
-                mx.rotate(state.me.angle);
-                mx.fillStyle = '#00f2fe';
-                mx.beginPath(); mx.moveTo(7,0); mx.lineTo(-4,-3); mx.lineTo(-4,3); mx.closePath(); mx.fill();
-                mx.restore();
             }
         }
 
@@ -4088,18 +4081,21 @@
 
         // ── CRAFTING SYSTEM ──────────────────────────────────────────
         const CRAFT_RECIPES = [
-            { result: 'shockwave', ingredients: ['dash', 'dash'], label: 'Shockwave', desc: '2× Dash' },
-            { result: 'blackhole', ingredients: ['emp', 'emp'], label: 'Blackhole', desc: '2× EMP' },
-            { result: 'orbitallaser', ingredients: ['laser', 'laser'], label: 'Orbital Laser', desc: '2× Laser' },
-            { result: 'frostnova', ingredients: ['freeze', 'freeze'], label: 'Frost Nova', desc: '2× Freeze' },
-            { result: 'soulrip', ingredients: ['vampire', 'vampire'], label: 'Soul Rip', desc: '2× Vampire' },
-            { result: 'chaos', ingredients: ['lightning', 'lightning'], label: 'Chaos Orb', desc: '2× Lightning' },
-            { result: 'nuke', ingredients: ['rocket', 'explosive'], label: 'Nuke', desc: 'Rocket + Explosive' },
-            { result: 'gravitypull', ingredients: ['blackhole', 'magnet'], label: 'Gravity Pull', desc: 'Blackhole + Magnet' },
-            { result: 'voidbeam', ingredients: ['laser', 'sniper'], label: 'Void Beam', desc: 'Laser + Sniper' },
-            { result: 'timebomb', ingredients: ['explosive', 'freeze'], label: 'Time Bomb', desc: 'Explosive + Freeze' },
-            { result: 'shadowclone', ingredients: ['clone', 'phase'], label: 'Shadow Clone', desc: 'Clone + Phase' },
-            { result: 'phoenix', ingredients: ['regeneration', 'heal'], label: 'Phoenix', desc: 'Regen + Heal' },
+            { result: 'shockwave',    ingredients: ['dash', 'emp'],           label: 'Shockwave',     desc: 'Dash + EMP' },
+            { result: 'blackhole',    ingredients: ['emp', 'gravitypull'],     label: 'Blackhole',     desc: 'EMP + Gravity Pull' },
+            { result: 'orbitallaser', ingredients: ['laser', 'sniper'],        label: 'Orbital Laser', desc: 'Laser + Sniper' },
+            { result: 'frostnova',    ingredients: ['freeze', 'shockwave'],    label: 'Frost Nova',    desc: 'Freeze + Shockwave' },
+            { result: 'soulrip',      ingredients: ['vampire', 'soulsteal'],   label: 'Soul Rip',      desc: 'Vampire + Soul Steal' },
+            { result: 'chaos',        ingredients: ['lightning', 'blackhole'], label: 'Chaos Orb',     desc: 'Lightning + Blackhole' },
+            { result: 'nuke',         ingredients: ['rocket', 'explosive'],    label: 'Nuke',          desc: 'Rocket + Explosive' },
+            { result: 'gravitypull',  ingredients: ['blackhole', 'magnet'],    label: 'Gravity Pull',  desc: 'Blackhole + Magnet' },
+            { result: 'voidbeam',     ingredients: ['laser', 'phase'],         label: 'Void Beam',     desc: 'Laser + Phase' },
+            { result: 'timebomb',     ingredients: ['explosive', 'freeze'],    label: 'Time Bomb',     desc: 'Explosive + Freeze' },
+            { result: 'shadowclone',  ingredients: ['clone', 'phase'],         label: 'Shadow Clone',  desc: 'Clone + Phase' },
+            { result: 'phoenix',      ingredients: ['regeneration', 'heal'],   label: 'Phoenix',       desc: 'Regen + Heal' },
+            { result: 'soulsteal',    ingredients: ['vampire', 'poison'],      label: 'Soul Steal',    desc: 'Vampire + Poison' },
+            { result: 'mirror',       ingredients: ['shield', 'phase'],        label: 'Mirror Shield', desc: 'Shield + Phase' },
+            { result: 'lightning',    ingredients: ['emp', 'scatter'],         label: 'Lightning',     desc: 'EMP + Scatter' },
         ];
 
         let craftModalOpen = false;
@@ -4118,9 +4114,9 @@
             const list = document.getElementById('craft-recipes-list');
             if (!list) return;
             list.innerHTML = '';
-            // Count all items across all inventory slots
+            // Count items across all UNLOCKED inventory slots
             const invCounts = {};
-            for (let s = 0; s < 3; s++) {
+            for (let s = 0; s < (state.inventorySlots || 1); s++) {
                 const p = state.inventory[s];
                 if (p) invCounts[p] = (invCounts[p] || 0) + 1;
             }
@@ -4136,17 +4132,17 @@
                 div.innerHTML = `
                     <div class="recipe-name">
                         <span style="color:${resultInfo.color};">${recipe.label}</span>
-                        <span class="recipe-status ${canCraft ? 'can-craft' : 'cannot-craft'}">${canCraft ? 'Ready' : 'Need More'}</span>
+                        <span class="recipe-status ${canCraft ? 'can-craft' : 'cannot-craft'}">${canCraft ? '✓ Ready' : 'Need More'}</span>
                     </div>
-                    <div class="recipe-ingredients">📦 ${recipe.desc}</div>
+                    <div class="recipe-ingredients" style="font-size:0.72rem;color:rgba(255,255,255,0.5);">📦 ${recipe.desc}</div>
                     <div class="recipe-expanded" id="recipe-exp-${idx}">
                         ${Object.entries(needed).map(([ing, count]) => {
                             const have = invCounts[ing] || 0;
                             const ok = have >= count;
                             const ingInfo = ALL_POWERS[ing];
-                            return `<div class="recipe-ing-row"><span class="ing-name">${ingInfo ? ingInfo.name : ing}</span><span class="ing-have ${ok ? 'ok' : 'miss'}">${have}/${count}</span></div>`;
+                            return `<div class="recipe-ing-row"><span class="ing-name" style="color:${ingInfo ? ingInfo.color : '#fff'}">${ingInfo ? ingInfo.name : ing}</span><span class="ing-have ${ok ? 'ok' : 'miss'}">${have}/${count}</span></div>`;
                         }).join('')}
-                        <button class="recipe-craft-btn" ${canCraft ? '' : 'disabled'} onclick="doCraft(${idx})">Craft ${recipe.label}</button>
+                        <button class="recipe-craft-btn" ${canCraft ? '' : 'disabled'} onclick="doCraft(${idx})">⚗️ Craft ${recipe.label}</button>
                     </div>
                 `;
                 div.querySelector('.recipe-name').addEventListener('click', () => {
@@ -4158,26 +4154,31 @@
         }
 
         function doCraft(recipeIdx) {
+            if (!state.me) return;
             const recipe = CRAFT_RECIPES[recipeIdx];
             if (!recipe) return;
-            // Count inventory
+            // Build needed map
             const needed = {};
             recipe.ingredients.forEach(ing => { needed[ing] = (needed[ing] || 0) + 1; });
-            // Check again
+            // Work on a copy of inventory
             const invCopy = [...state.inventory];
+            // Remove ingredients from slots
             for (const [ing, count] of Object.entries(needed)) {
                 let removed = 0;
-                for (let s = 0; s < 3; s++) {
+                for (let s = 0; s < (state.inventorySlots || 1); s++) {
                     if (invCopy[s] === ing && removed < count) { invCopy[s] = null; removed++; }
                 }
-                if (removed < count) { showToast('Missing ingredients!', 'warning'); return; }
+                if (removed < count) { showToast('Missing: ' + (ALL_POWERS[ing] ? ALL_POWERS[ing].name : ing), 'warning'); return; }
             }
-            // Place result in first empty slot
+            // Place result in first empty slot (prefer active slot if empty, otherwise first empty)
             let placed = false;
-            for (let s = 0; s < 3; s++) {
-                if (invCopy[s] === null) { invCopy[s] = recipe.result; placed = true; break; }
+            if (invCopy[state.activeSlot] === null) { invCopy[state.activeSlot] = recipe.result; placed = true; }
+            if (!placed) {
+                for (let s = 0; s < (state.inventorySlots || 1); s++) {
+                    if (invCopy[s] === null) { invCopy[s] = recipe.result; placed = true; break; }
+                }
             }
-            if (!placed) { invCopy[0] = recipe.result; } // replace slot 0 if all full
+            if (!placed) { invCopy[state.activeSlot] = recipe.result; } // overwrite active if all full
             state.inventory = invCopy;
             state.me.currentPower = state.inventory[state.activeSlot];
             updateInventoryUI(); broadcastState();
