@@ -1175,14 +1175,6 @@
         })();
         const NPC_COLORS = { common:'#9ca3af', rare:'#3b82f6', epic:'#a855f7', legendary:'#f59e0b', mythic:'#ff00cc' };
         const NPC_RADII  = { common:18, rare:20, epic:23, legendary:27, mythic:32 };
-        function hexToRgba(hex, alpha) {
-            hex = (hex || '#ffffff').replace('#','');
-            if (hex.length === 3) hex = hex[0]+hex[0]+hex[1]+hex[1]+hex[2]+hex[2];
-            const r = parseInt(hex.substring(0,2),16);
-            const g = parseInt(hex.substring(2,4),16);
-            const b = parseInt(hex.substring(4,6),16);
-            return `rgba(${r},${g},${b},${alpha})`;
-        }
         let sbClient = null, currentUser = null, dbUsername = '', isAdmin = false;
         let socket = null, myId = null, isConnecting = false, connectionAttempts = 0;
         let powerupIdCounter = 10000, projectileIdCounter = 50000;
@@ -1194,7 +1186,7 @@
             speedActive: false, phaseActive: false, berserkerActive: false, shootCooldown: 0,
             cloneTimer: 0, cloneMaxTime: 12, kills: 0, omegaUnlocked: false, omegaPower: null,
             omegaTimer: 0, adminGodMode: false, adminInfinite: false,
-            mirrorActive: false, timestopActive: false, hitCooldowns: {}, isDead: false, respawnTimer: 0,
+            mirrorActive: false, timestopActive: false, hitCooldowns: {}, isDead: false, respawnTimer: 0, spawnProtection: 0,
             nextOmegaThreshold: 10,
             baby: null, babyShootCooldown: 0, remoteBabies: {}, babyBroadcastTimer: 0,
             laserBeams: [], rocketTrails: [], timebombs: [],
@@ -1871,14 +1863,6 @@
         socket = null;
     });
 
-    socket.on('forceDisconnect', (data) => {
-        showToast(data.message || 'You were disconnected.', 'warning');
-        state.running = false;
-        socket.disconnect();
-        socket = null;
-        document.getElementById('main-menu').style.display = '';
-    });
-
     socket.on('joinSuccess', () => {
         clearTimeout(connectionTimeout);
         document.getElementById('main-menu').style.display = 'none';
@@ -1961,6 +1945,7 @@
                 state.me = data.player;
                 state.me.recoil = 0; state.me.poisoned = 0; state.me.frozen = 0;
                 state.me.kills = 0; state.me.isOmegaPower = false;
+                state.spawnProtection = 3.0; // 3s invincibility on join
                 state.players = {};
                 Object.keys(data.players || {}).forEach(id => {
                     if (id !== myId) { state.players[id] = data.players[id]; state.players[id].kills = 0; }
@@ -2168,6 +2153,7 @@
             socket.on('playerHit', data => {
                 if (data.targetId === myId && state.me && !state.isDead) {
                     if (state.adminGodMode) return;
+                    if (state.spawnProtection > 0) return; // invincible after spawn
                     if (state.mirrorActive && data.attackerId) {
                         socket.emit('playerHit', { targetId: data.attackerId, damage: data.damage, attackerId: myId });
                         spawnParticles(state.me.x, state.me.y, 10, '#c0c0c0');
@@ -2560,6 +2546,7 @@
             state.mirrorActive = false; state.timestopActive = false;
             state.hitCooldowns = {};
             state.stamina = 100; state.staminaDepleted = false;
+            state.spawnProtection = 3.0; // 3s invincibility after respawn
             updateInventoryUI(); updateScreenEffects();
             spawnParticles(state.me.x, state.me.y, 20, '#00f2fe');
             broadcastState();
@@ -2613,6 +2600,8 @@
 
         function update(dt) {
             if (!state.me) return;
+            // Spawn protection countdown
+            if (state.spawnProtection > 0) state.spawnProtection = Math.max(0, state.spawnProtection - dt);
             // shootCooldown is now decremented in the movement section below
             if (state.me.poisoned > 0) {
                 state.me.poisoned -= dt;
@@ -2951,6 +2940,37 @@
                 }
             }
 
+            // ── NPC interpolation + hit detection (in update, not render) ──
+            for (const npcId in state.npcs) {
+                const npc = state.npcs[npcId];
+                if (!npc) continue;
+                // Smooth movement using dt so NPCs glide instead of snap
+                if (npc.targetX !== undefined) {
+                    npc.x = (npc.x !== undefined ? npc.x : npc.targetX);
+                    npc.y = (npc.y !== undefined ? npc.y : npc.targetY);
+                    npc.x += (npc.targetX - npc.x) * Math.min(1, dt * 8);
+                    npc.y += (npc.targetY - npc.y) * Math.min(1, dt * 8);
+                }
+                if (!npc.rarity || (npc.hp !== undefined && npc.hp <= 0)) continue;
+                // Hit detection — runs here so projectiles are guaranteed to be valid
+                for (const pid in state.projectiles) {
+                    const proj = state.projectiles[pid];
+                    if (!proj || proj.owner !== myId || proj.isRemote) continue;
+                    const npcRadius = NPC_RADII[npc.rarity] || 20;
+                    const hitDist = Math.sqrt((npc.x - proj.x) ** 2 + (npc.y - proj.y) ** 2);
+                    const hitKey = 'npc_' + npcId + '_' + pid;
+                    if (hitDist < npcRadius + 10 && !state.hitCooldowns[hitKey]) {
+                        state.hitCooldowns[hitKey] = Date.now();
+                        const dmg = proj.damage || 20;
+                        npc.hp = Math.max(0, (npc.hp || 0) - dmg); // optimistic update
+                        socket.emit('npcHit', { npcId, damage: dmg });
+                        spawnParticles(npc.x, npc.y, 6, NPC_COLORS[npc.rarity] || '#fff');
+                        spawnDamageNumber(npc.x, npc.y, dmg, 'damage');
+                        if (!proj.pierce) { delete state.projectiles[pid]; break; }
+                    }
+                }
+            }
+
             const now = Date.now();
             for (let key in state.hitCooldowns) {
                 if (now - state.hitCooldowns[key] > 500) delete state.hitCooldowns[key];
@@ -3147,27 +3167,7 @@
             for (const npcId in state.npcs) {
                 const npc = state.npcs[npcId];
                 if (!npc || !npc.rarity || (npc.hp !== undefined && npc.hp <= 0)) continue;
-                // Smooth movement
-                if (npc.targetX !== undefined) {
-                    npc.x = (npc.x || npc.targetX) + ((npc.targetX - (npc.x || npc.targetX)) * 0.2);
-                    npc.y = (npc.y || npc.targetY) + ((npc.targetY - (npc.y || npc.targetY)) * 0.2);
-                }
                 drawNPC(npc);
-                // NPC hit detection for local projectiles
-                for (let pid in state.projectiles) {
-                    const proj = state.projectiles[pid];
-                    if (proj.owner !== myId || proj.isRemote) continue;
-                    const hitDist = Math.sqrt((npc.x - proj.x)**2 + (npc.y - proj.y)**2);
-                    const hitKey = 'npc_' + npcId + '_' + pid;
-                    const npcRadius = NPC_RADII[npc.rarity] || 20;
-                    if (hitDist < npcRadius + 10 && !state.hitCooldowns[hitKey]) {
-                        state.hitCooldowns[hitKey] = Date.now();
-                        socket.emit('npcHit', { npcId, damage: proj.damage || 20 });
-                        spawnParticles(npc.x, npc.y, 6, NPC_COLORS[npc.rarity] || '#fff');
-                        spawnDamageNumber(npc.x, npc.y, proj.damage || 20, 'damage');
-                        if (!proj.pierce) delete state.projectiles[pid];
-                    }
-                }
             }
             for (let id in state.players) {
                 if (state.players[id].hp > 0) drawPlayer(state.players[id], false, false);
@@ -3438,6 +3438,16 @@
             ctx.beginPath(); ctx.arc(0, 0, 22, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
             ctx.fillStyle = 'rgba(0,0,0,0.6)';
             ctx.beginPath(); ctx.arc(10, -7, 4, 0, Math.PI * 2); ctx.arc(10, 7, 4, 0, Math.PI * 2); ctx.fill();
+            // Spawn protection shield ring
+            if (isMe && state.spawnProtection > 0) {
+                const pulse = Math.sin(Date.now() / 120) * 4;
+                ctx.save();
+                ctx.strokeStyle = `rgba(0,255,180,${0.4 + Math.sin(Date.now()/200)*0.3})`;
+                ctx.lineWidth = 3;
+                ctx.shadowBlur = 14; ctx.shadowColor = '#00ffb4';
+                ctx.beginPath(); ctx.arc(0, 0, 30 + pulse, 0, Math.PI * 2); ctx.stroke();
+                ctx.restore();
+            }
             ctx.restore();
             ctx.globalAlpha = 1;
         }
@@ -3454,9 +3464,9 @@
             if (npc.rarity === 'mythic' || npc.rarity === 'legendary') {
                 const auraR = r + 20 + Math.sin(Date.now()/200)*8;
                 const grad = ctx.createRadialGradient(0,0,r,0,0,auraR);
-                grad.addColorStop(0, hexToRgba(color, 0.35));
+                grad.addColorStop(0, color.replace(')', ',0.35)').replace('rgb','rgba').replace('#', 'rgba(').replace(/rgba\(([\da-f]{2})([\da-f]{2})([\da-f]{2}),/, (m,r,g,b) => 'rgba('+parseInt(r,16)+','+parseInt(g,16)+','+parseInt(b,16)+','));
                 grad.addColorStop(1, 'transparent');
-                ctx.fillStyle = hexToRgba(color, 0.27);
+                ctx.fillStyle = color + '44';
                 ctx.beginPath(); ctx.arc(0,0,auraR,0,Math.PI*2); ctx.fill();
             }
             // Body
