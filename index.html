@@ -1883,7 +1883,7 @@
         connectionAttempts = 0;
         // Announce owner joining to everyone
         if (isAdmin && socket) {
-            socket.emit('adminAnnouncement', { message: '[ OWNER ] Astraphobia Has Joined!' });
+            socket.emit('adminAnnouncement', { message: '👑 The Owner Astraphobia Has Joined!' });
         }
     });
 
@@ -3318,7 +3318,7 @@
                 ctx.shadowBlur = 12; ctx.shadowColor = '#ffd700';
                 ctx.fillStyle = `rgba(255,215,0,${ownerPulse})`;
                 ctx.font = 'bold 10px Outfit';
-                ctx.fillText('* OWNER *', 0, -68);
+                ctx.fillText('👑 OWNER', 0, -68);
                 ctx.restore();
             }
 
