@@ -634,40 +634,6 @@
         @keyframes effectPulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 0.8; } }
 
         /* Update panel on main menu */
-        /* ── Update Panel ── */
-        #update-panel {
-            position: fixed; bottom: 24px; left: 24px;
-            width: 258px; z-index: 101; pointer-events: auto;
-            background: rgba(8,8,18,0.92);
-            border: 1px solid rgba(0,242,254,0.14);
-            border-radius: 14px; padding: 0;
-            backdrop-filter: blur(14px);
-            box-shadow: 0 8px 32px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05);
-            overflow: hidden;
-        }
-        #update-panel.hidden { display: none; }
-        #update-panel .up-header {
-            display: flex; align-items: center; gap: 10px; padding: 12px 14px 10px;
-            background: rgba(0,242,254,0.05);
-            border-bottom: 1px solid rgba(0,242,254,0.1);
-        }
-        #update-panel .up-icon {
-            width: 30px; height: 30px; border-radius: 8px; flex-shrink: 0;
-            background: linear-gradient(135deg,rgba(0,242,254,0.3),rgba(79,172,254,0.2));
-            display: flex; align-items: center; justify-content: center; font-size: 15px;
-        }
-        #update-panel .up-title { font-size: 0.75rem; font-weight: 800; letter-spacing: 0.8px; color: #00f2fe; text-transform: uppercase; }
-        #update-panel .up-date { font-size: 0.58rem; color: rgba(255,255,255,0.3); margin-top: 1px; }
-        #update-panel .up-body { padding: 10px 14px 12px; display: flex; flex-direction: column; gap: 7px; }
-        .update-entry { display: flex; gap: 9px; align-items: flex-start; }
-        .update-tag {
-            font-size: 0.5rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.3px;
-            padding: 2px 6px; border-radius: 5px; white-space: nowrap; margin-top: 2px; flex-shrink: 0;
-        }
-        .update-tag.new { background: rgba(16,185,129,0.12); color: #34d399; border: 1px solid rgba(16,185,129,0.28); }
-        .update-tag.fix { background: rgba(239,68,68,0.1); color: #f87171; border: 1px solid rgba(239,68,68,0.22); }
-        .update-tag.change { background: rgba(79,172,254,0.1); color: #60b4fe; border: 1px solid rgba(79,172,254,0.22); }
-        .update-desc { font-size: 0.69rem; color: rgba(255,255,255,0.5); line-height: 1.45; }
         /* ── Emote System ── */
         #emote-wheel {
             position: fixed; right: 66px; top: 50%; transform: translateY(-50%);
@@ -827,13 +793,22 @@
         #craft-modal {
             position: fixed; right: 60px; top: 50%; transform: translateY(-30%);
             z-index: 400; pointer-events: auto; display: none;
-            width: 310px;
+            width: 310px; max-height: 70vh;
         }
         #craft-modal.visible { display: block; animation: slideUp 0.2s ease-out; }
         #craft-modal .craft-header {
             font-size: 1rem; font-weight: 800; color: #f59e0b; margin-bottom: 12px;
             display: flex; align-items: center; gap: 8px;
         }
+        #craft-recipes-list {
+            max-height: calc(70vh - 80px);
+            overflow-y: auto;
+            scroll-behavior: smooth;
+        }
+        #craft-recipes-list::-webkit-scrollbar { width: 4px; }
+        #craft-recipes-list::-webkit-scrollbar-track { background: transparent; }
+        #craft-recipes-list::-webkit-scrollbar-thumb { background: rgba(245,158,11,0.3); border-radius: 4px; }
+        #craft-recipes-list::-webkit-scrollbar-thumb:hover { background: rgba(245,158,11,0.6); }
         .recipe-item {
             background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);
             border-radius: 10px; padding: 10px 12px; margin-bottom: 8px; cursor: pointer;
@@ -917,41 +892,7 @@
             </div>
         </div>
 
-        <div id="update-panel">
-            <div class="up-header">
-                <div class="up-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="8" y="2" width="8" height="4" rx="1" fill="#00f2fe"/><rect x="4" y="4" width="16" height="18" rx="2" stroke="#00f2fe" stroke-width="2" fill="none"/><line x1="8" y1="10" x2="16" y2="10" stroke="#00f2fe" stroke-width="1.5" stroke-linecap="round"/><line x1="8" y1="14" x2="16" y2="14" stroke="#00f2fe" stroke-width="1.5" stroke-linecap="round"/><line x1="8" y1="18" x2="13" y2="18" stroke="#00f2fe" stroke-width="1.5" stroke-linecap="round"/></svg></div>
-                <div>
-                    <div class="up-title">Latest Updates</div>
-                    <div class="up-date">Feb 2026 patch</div>
-                </div>
-            </div>
-            <div class="up-body">
-                <div class="update-entry">
-                    <span class="update-tag new">New</span>
-                    <span class="update-desc">NPCs — Common to Mythic, unique drops &amp; behavior</span>
-                </div>
-                <div class="update-entry">
-                    <span class="update-tag new">New</span>
-                    <span class="update-desc">Emotes — pick 4, use in-game with E key</span>
-                </div>
-                <div class="update-entry">
-                    <span class="update-tag new">New</span>
-                    <span class="update-desc">3-slot inventory — unlocks at 5 kills per life</span>
-                </div>
-                <div class="update-entry">
-                    <span class="update-tag new">New</span>
-                    <span class="update-desc">Sprint (Shift) — stamina drain &amp; regen</span>
-                </div>
-                <div class="update-entry">
-                    <span class="update-tag change">Change</span>
-                    <span class="update-desc">Sniper 6s · Minigun 0.2s · Others 1.5s cooldown</span>
-                </div>
-                <div class="update-entry">
-                    <span class="update-tag fix">Fix</span>
-                    <span class="update-desc">Forum visible to all — no login required</span>
-                </div>
-            </div>
-        </div>
+
 
         <button id="admin-toggle" class="pointer-events-auto" onclick="toggleAdminPanel()">OWNER</button>
 
@@ -2211,6 +2152,20 @@
                 if (data.drops) {
                     data.drops.forEach(d => { if (ALL_POWERS[d.type]) state.powerups[d.id] = d; });
                 }
+                if (data.killerId === myId) {
+                    state.kills++;
+                    state.killsThisLife++;
+                    state.me.kills = state.kills;
+                    updateKillCounter();
+                    showToast(`Kill! (${state.kills}/${state.nextOmegaThreshold})`, 'kill');
+                    if (state.killsThisLife === 5 && state.inventorySlots < 3) {
+                        state.inventorySlots = 3;
+                        updateInventoryUI();
+                        showToast('+ 3 Inventory Slots Unlocked!', 'success');
+                    }
+                    if (state.kills >= state.nextOmegaThreshold && !state.omegaUnlocked) unlockOmega();
+                    broadcastState();
+                }
             });
 
             // NPC SOCKET EVENTS
@@ -2232,6 +2187,20 @@
                 }
                 delete state.npcs[data.npcId];
                 if (data.drops) data.drops.forEach(d => { if (ALL_POWERS[d.type]) state.powerups[d.id] = d; });
+                if (data.killerId === myId) {
+                    state.kills++;
+                    state.killsThisLife++;
+                    state.me.kills = state.kills;
+                    updateKillCounter();
+                    showToast(`Kill! (${state.kills}/${state.nextOmegaThreshold})`, 'kill');
+                    if (state.killsThisLife === 5 && state.inventorySlots < 3) {
+                        state.inventorySlots = 3;
+                        updateInventoryUI();
+                        showToast('+ 3 Inventory Slots Unlocked!', 'success');
+                    }
+                    if (state.kills >= state.nextOmegaThreshold && !state.omegaUnlocked) unlockOmega();
+                    broadcastState();
+                }
             });
             // EMOTE SOCKET EVENTS
             socket.on('playerEmote', (data) => {
@@ -2652,10 +2621,9 @@
             state.omegaUnlocked = false; state.omegaPower = null;
             state.speedActive = false; state.phaseActive = false; state.berserkerActive = false;
             state.mirrorActive = false; state.timestopActive = false; state.clones = []; state.cloneTimer = 0;
-            // Reset inventory on death
+            // Reset inventory on death (keep slot count)
             state.inventory = [null, null, null];
             state.activeSlot = 0;
-            state.inventorySlots = 1;   // need 5 kills again to get 3 slots
             state.killsThisLife = 0;
             state.slotCooldowns = [0, 0, 0];
             state.sprinting = false;
@@ -2995,6 +2963,7 @@
                     const pInfo = ALL_POWERS[powerType];
                     showToast(`Got ${pInfo.name}!`, pInfo.rarity === 'omega' ? 'omega' : 'mythic');
                     delete state.powerups[id];
+                    if (craftModalOpen) renderCraftRecipes();
                 }
             }
 
@@ -4042,22 +4011,34 @@
         }
 
         // ── CRAFTING SYSTEM ──────────────────────────────────────────
+        // Powers that can ONLY be obtained via crafting (not on map)
+        const CRAFT_ONLY_POWERS = {
+            inferno:      { color: '#ff3d00', name: 'Inferno',       type: 'instant',  rarity: 'legendary' },
+            vortexstrike: { color: '#7c3aed', name: 'Vortex Strike', type: 'instant',  rarity: 'legendary' },
+            thundergod:   { color: '#fbbf24', name: 'Thunder God',   type: 'instant',  rarity: 'legendary' },
+            bloodrush:    { color: '#dc143c', name: 'Blood Rush',    type: 'toggle',   rarity: 'epic' },
+            glacialburst: { color: '#67e8f9', name: 'Glacial Burst', type: 'instant',  rarity: 'epic' },
+            soulnova:     { color: '#c026d3', name: 'Soul Nova',     type: 'instant',  rarity: 'legendary' },
+            chainlaser:   { color: '#22d3ee', name: 'Chain Laser',   type: 'instant',  rarity: 'epic' },
+            detonator:    { color: '#f97316', name: 'Detonator',     type: 'instant',  rarity: 'legendary' },
+            phantomstep:  { color: '#8b5cf6', name: 'Phantom Step',  type: 'instant',  rarity: 'epic' },
+            stormwall:    { color: '#60a5fa', name: 'Storm Wall',    type: 'instant',  rarity: 'legendary' },
+        };
+
+        // Merge craft-only powers into ALL_POWERS so they render properly
+        Object.assign(ALL_POWERS, CRAFT_ONLY_POWERS);
+
         const CRAFT_RECIPES = [
-            { result: 'shockwave',    ingredients: ['dash', 'emp'],           label: 'Shockwave',     desc: 'Dash + EMP' },
-            { result: 'blackhole',    ingredients: ['emp', 'gravitypull'],     label: 'Blackhole',     desc: 'EMP + Gravity Pull' },
-            { result: 'orbitallaser', ingredients: ['laser', 'sniper'],        label: 'Orbital Laser', desc: 'Laser + Sniper' },
-            { result: 'frostnova',    ingredients: ['freeze', 'shockwave'],    label: 'Frost Nova',    desc: 'Freeze + Shockwave' },
-            { result: 'soulrip',      ingredients: ['vampire', 'soulsteal'],   label: 'Soul Rip',      desc: 'Vampire + Soul Steal' },
-            { result: 'chaos',        ingredients: ['lightning', 'blackhole'], label: 'Chaos Orb',     desc: 'Lightning + Blackhole' },
-            { result: 'nuke',         ingredients: ['rocket', 'explosive'],    label: 'Nuke',          desc: 'Rocket + Explosive' },
-            { result: 'gravitypull',  ingredients: ['blackhole', 'magnet'],    label: 'Gravity Pull',  desc: 'Blackhole + Magnet' },
-            { result: 'voidbeam',     ingredients: ['laser', 'phase'],         label: 'Void Beam',     desc: 'Laser + Phase' },
-            { result: 'timebomb',     ingredients: ['explosive', 'freeze'],    label: 'Time Bomb',     desc: 'Explosive + Freeze' },
-            { result: 'shadowclone',  ingredients: ['clone', 'phase'],         label: 'Shadow Clone',  desc: 'Clone + Phase' },
-            { result: 'phoenix',      ingredients: ['regeneration', 'heal'],   label: 'Phoenix',       desc: 'Regen + Heal' },
-            { result: 'soulsteal',    ingredients: ['vampire', 'poison'],      label: 'Soul Steal',    desc: 'Vampire + Poison' },
-            { result: 'mirror',       ingredients: ['shield', 'phase'],        label: 'Mirror Shield', desc: 'Shield + Phase' },
-            { result: 'lightning',    ingredients: ['emp', 'scatter'],         label: 'Lightning',     desc: 'EMP + Scatter' },
+            { result: 'inferno',      ingredients: ['nuke', 'speed'],          label: 'Inferno',       desc: 'Nuke + Speed - Firestorm that burns ALL enemies on screen' },
+            { result: 'vortexstrike', ingredients: ['blackhole', 'dash'],       label: 'Vortex Strike', desc: 'Blackhole + Dash - Warp into enemies and implode them' },
+            { result: 'thundergod',   ingredients: ['lightning', 'emp'],        label: 'Thunder God',   desc: 'Lightning + EMP - Chain lightning across all enemies' },
+            { result: 'bloodrush',    ingredients: ['berserker', 'vampire'],    label: 'Blood Rush',    desc: 'Berserker + Vampire - Heal from dealing damage (toggle)' },
+            { result: 'glacialburst', ingredients: ['freeze', 'shockwave'],     label: 'Glacial Burst', desc: 'Freeze + Shockwave - Ice nova that slows and shatters' },
+            { result: 'soulnova',     ingredients: ['soulsteal', 'nuke'],       label: 'Soul Nova',     desc: 'Soul Steal + Nuke - Massive soul explosion' },
+            { result: 'chainlaser',   ingredients: ['laser', 'tripleshot'],     label: 'Chain Laser',   desc: 'Laser + Triple - Laser that bounces between enemies' },
+            { result: 'detonator',    ingredients: ['explosive', 'rocket'],     label: 'Detonator',     desc: 'Explosive + Rocket - Massive chain explosion' },
+            { result: 'phantomstep',  ingredients: ['phase', 'teleport'],       label: 'Phantom Step',  desc: 'Phase + Teleport - Blink through enemies damaging them' },
+            { result: 'stormwall',    ingredients: ['lightning', 'shield'],     label: 'Storm Wall',    desc: 'Lightning + Shield - Electric barrier that zaps attackers' },
         ];
 
         let craftModalOpen = false;
@@ -4076,19 +4057,21 @@
             const list = document.getElementById('craft-recipes-list');
             if (!list) return;
             list.innerHTML = '';
-            // Count items across all UNLOCKED inventory slots
+            // Count ALL items across all 3 slots (locked slots still hold powers)
             const invCounts = {};
-            for (let s = 0; s < (state.inventorySlots || 1); s++) {
+            for (let s = 0; s < 3; s++) {
                 const p = state.inventory[s];
                 if (p) invCounts[p] = (invCounts[p] || 0) + 1;
             }
             CRAFT_RECIPES.forEach((recipe, idx) => {
                 const resultInfo = ALL_POWERS[recipe.result];
                 if (!resultInfo) return;
-                // Check if we have all ingredients
+                // Build needed map
                 const needed = {};
                 recipe.ingredients.forEach(ing => { needed[ing] = (needed[ing] || 0) + 1; });
+                // canCraft: every ingredient must be available in sufficient quantity
                 const canCraft = Object.entries(needed).every(([ing, count]) => (invCounts[ing] || 0) >= count);
+                const rarityColor = RARITY_COLORS[resultInfo.rarity] || '#9ca3af';
                 const div = document.createElement('div');
                 div.className = 'recipe-item';
                 div.innerHTML = `
@@ -4096,7 +4079,7 @@
                         <span style="color:${resultInfo.color};">${recipe.label}</span>
                         <span class="recipe-status ${canCraft ? 'can-craft' : 'cannot-craft'}">${canCraft ? '✓ Ready' : 'Need More'}</span>
                     </div>
-                    <div class="recipe-ingredients" style="font-size:0.72rem;color:rgba(255,255,255,0.5);">📦 ${recipe.desc}</div>
+                    <div class="recipe-ingredients" style="font-size:0.72rem;color:rgba(255,255,255,0.5);">${recipe.desc}</div>
                     <div class="recipe-expanded" id="recipe-exp-${idx}">
                         ${Object.entries(needed).map(([ing, count]) => {
                             const have = invCounts[ing] || 0;
@@ -4104,7 +4087,7 @@
                             const ingInfo = ALL_POWERS[ing];
                             return `<div class="recipe-ing-row"><span class="ing-name" style="color:${ingInfo ? ingInfo.color : '#fff'}">${ingInfo ? ingInfo.name : ing}</span><span class="ing-have ${ok ? 'ok' : 'miss'}">${have}/${count}</span></div>`;
                         }).join('')}
-                        <button class="recipe-craft-btn" ${canCraft ? '' : 'disabled'} onclick="doCraft(${idx})">⚗️ Craft ${recipe.label}</button>
+                        <button class="recipe-craft-btn" ${canCraft ? '' : 'disabled'} onclick="doCraft(${idx})">Craft ${recipe.label}</button>
                     </div>
                 `;
                 div.querySelector('.recipe-name').addEventListener('click', () => {
@@ -4122,31 +4105,41 @@
             // Build needed map
             const needed = {};
             recipe.ingredients.forEach(ing => { needed[ing] = (needed[ing] || 0) + 1; });
-            // Work on a copy of inventory
+            // Verify we actually have all ingredients across all 3 slots
+            const invCounts = {};
+            for (let s = 0; s < 3; s++) {
+                const p = state.inventory[s];
+                if (p) invCounts[p] = (invCounts[p] || 0) + 1;
+            }
+            for (const [ing, count] of Object.entries(needed)) {
+                if ((invCounts[ing] || 0) < count) {
+                    showToast('Missing: ' + (ALL_POWERS[ing] ? ALL_POWERS[ing].name : ing), 'warning');
+                    return;
+                }
+            }
+            // Work on a copy of inventory and remove ingredients from all 3 slots
             const invCopy = [...state.inventory];
-            // Remove ingredients from slots
             for (const [ing, count] of Object.entries(needed)) {
                 let removed = 0;
-                for (let s = 0; s < (state.inventorySlots || 1); s++) {
+                for (let s = 0; s < 3; s++) {
                     if (invCopy[s] === ing && removed < count) { invCopy[s] = null; removed++; }
                 }
-                if (removed < count) { showToast('Missing: ' + (ALL_POWERS[ing] ? ALL_POWERS[ing].name : ing), 'warning'); return; }
             }
-            // Place result in first empty slot (prefer active slot if empty, otherwise first empty)
+            // Place result: prefer active slot if empty, else first empty of all 3, else overwrite active
             let placed = false;
             if (invCopy[state.activeSlot] === null) { invCopy[state.activeSlot] = recipe.result; placed = true; }
             if (!placed) {
-                for (let s = 0; s < (state.inventorySlots || 1); s++) {
+                for (let s = 0; s < 3; s++) {
                     if (invCopy[s] === null) { invCopy[s] = recipe.result; placed = true; break; }
                 }
             }
-            if (!placed) { invCopy[state.activeSlot] = recipe.result; } // overwrite active if all full
+            if (!placed) { invCopy[state.activeSlot] = recipe.result; }
             state.inventory = invCopy;
             state.me.currentPower = state.inventory[state.activeSlot];
             updateInventoryUI(); broadcastState();
             const resultInfo = ALL_POWERS[recipe.result];
             showToast(`Crafted ${resultInfo.name}!`, resultInfo.rarity === 'legendary' ? 'mythic' : resultInfo.rarity);
-            spawnParticles(state.me.x, state.me.y, 20, resultInfo.color);
+            spawnParticles(state.me.x, state.me.y, 25, resultInfo.color);
             // Close modal
             craftModalOpen = false;
             document.getElementById('craft-modal').classList.remove('visible');
@@ -4775,6 +4768,149 @@
                     showToast('SOUL STEAL! Life drained!', 'mythic'); used = true; break;
                 case 'phoenix':
                     showToast('Phoenix: You will auto-revive on death!', 'mythic'); return;
+                // ── CRAFT-ONLY POWERS ──
+                case 'inferno':
+                    // Firestorm hitting ALL enemies on screen
+                    let infernoHit = 0;
+                    for (let id in state.players) {
+                        const p = state.players[id];
+                        const dist = Math.sqrt((state.me.x-p.x)**2+(state.me.y-p.y)**2);
+                        if (dist < 900) { hitPlayer(id, 55); spawnParticles(p.x, p.y, 15, '#ff3d00'); infernoHit++; }
+                    }
+                    tryDamageBoss(state.me.x, state.me.y, 900, 55);
+                    tryDamageNPCs(state.me.x, state.me.y, 900, 55);
+                    for (let i = 0; i < 80; i++) spawnParticles(
+                        state.me.x + (Math.random()-0.5)*800, state.me.y + (Math.random()-0.5)*800, 2, '#ff3d00');
+                    state.explosions.push({ x: state.me.x, y: state.me.y, radius: 50, maxRadius: 900, life: 1.2, color: '#ff3d00' });
+                    emitAbilityEffect('nuke', state.me.x, state.me.y);
+                    showToast(`INFERNO! (${infernoHit} enemies hit)`, 'mythic'); used = true; break;
+                case 'vortexstrike':
+                    // Dash through enemies, pull them to you, implode
+                    const vtAngle = state.me.angle;
+                    const vtStart = { x: state.me.x, y: state.me.y };
+                    state.me.x += Math.cos(vtAngle)*200; state.me.y += Math.sin(vtAngle)*200;
+                    state.me.x = Math.max(25, Math.min(CONFIG.map.width-25, state.me.x));
+                    state.me.y = Math.max(25, Math.min(CONFIG.map.height-25, state.me.y));
+                    spawnParticles(vtStart.x, vtStart.y, 20, '#7c3aed');
+                    spawnParticles(state.me.x, state.me.y, 30, '#7c3aed');
+                    state.explosions.push({ x: state.me.x, y: state.me.y, radius: 20, maxRadius: 250, life: 0.8, color: '#7c3aed' });
+                    for (let id in state.players) {
+                        const p = state.players[id];
+                        if (Math.sqrt((state.me.x-p.x)**2+(state.me.y-p.y)**2) < 260) { hitPlayer(id, 50); spawnParticles(p.x,p.y,10,'#7c3aed'); }
+                    }
+                    tryDamageBoss(state.me.x, state.me.y, 260, 50);
+                    tryDamageNPCs(state.me.x, state.me.y, 260, 50);
+                    socket.emit('abilityUsed', { type: 'voidrift', x: state.me.x, y: state.me.y, id: myId });
+                    showToast('VORTEX STRIKE!', 'mythic'); used = true; break;
+                case 'thundergod':
+                    // Chain lightning — each nearby enemy gets struck then chains
+                    const tgPts = [];
+                    for (let id in state.players) {
+                        const p = state.players[id];
+                        if (Math.sqrt((state.me.x-p.x)**2+(state.me.y-p.y)**2) < 500) {
+                            hitPlayer(id, 40); tgPts.push({ x: p.x, y: p.y });
+                            spawnParticles(p.x, p.y, 20, '#fbbf24');
+                        }
+                    }
+                    tryDamageBoss(state.me.x, state.me.y, 500, 40);
+                    tryDamageNPCs(state.me.x, state.me.y, 500, 40);
+                    tgPts.forEach(pt => state.explosions.push({ x: pt.x, y: pt.y, radius: 5, maxRadius: 80, life: 0.5, color: '#fbbf24' }));
+                    socket.emit('abilityUsed', { type: 'lightning', x: state.me.x, y: state.me.y, id: myId, pts: tgPts.slice(0,3) });
+                    showToast('THUNDER GOD!', 'mythic'); used = true; break;
+                case 'bloodrush':
+                    // Toggle berserker + vampire hybrid
+                    state.berserkerActive = !state.berserkerActive;
+                    state.vampireActive = state.berserkerActive;
+                    updateSpeedUI(); broadcastState();
+                    showToast(`Blood Rush: ${state.berserkerActive ? 'ACTIVE - heal on kill!' : 'OFF'}`, 'mythic'); return;
+                case 'glacialburst':
+                    // Ice nova - freeze + shatter
+                    for (let id in state.players) {
+                        const p = state.players[id];
+                        if (Math.sqrt((state.me.x-p.x)**2+(state.me.y-p.y)**2) < 320) { hitPlayer(id, 45); spawnParticles(p.x,p.y,15,'#67e8f9'); }
+                    }
+                    tryDamageBoss(state.me.x, state.me.y, 320, 45);
+                    tryDamageNPCs(state.me.x, state.me.y, 320, 45);
+                    for (let i = 0; i < 60; i++) { const a=(i/60)*Math.PI*2; spawnParticles(state.me.x+Math.cos(a)*280, state.me.y+Math.sin(a)*280, 3, '#67e8f9'); }
+                    state.explosions.push({ x: state.me.x, y: state.me.y, radius: 40, maxRadius: 320, life: 1, color: '#67e8f9' });
+                    socket.emit('abilityUsed', { type: 'frostnova', x: state.me.x, y: state.me.y, id: myId });
+                    showToast('GLACIAL BURST!', 'mythic'); used = true; break;
+                case 'soulnova':
+                    // Drain all nearby enemies completely, massive AoE
+                    let snStolen = 0;
+                    state.explosions.push({ x: state.me.x, y: state.me.y, radius: 40, maxRadius: 500, life: 1.5, color: '#c026d3' });
+                    for (let id in state.players) {
+                        const p = state.players[id];
+                        if (Math.sqrt((state.me.x-p.x)**2+(state.me.y-p.y)**2) < 500) { hitPlayer(id, 65); snStolen += 20; spawnParticles(p.x,p.y,20,'#c026d3'); }
+                    }
+                    state.me.hp = Math.min(100, state.me.hp + snStolen);
+                    if (snStolen > 0) spawnDamageNumber(state.me.x, state.me.y, snStolen, 'heal');
+                    tryDamageBoss(state.me.x, state.me.y, 500, 65);
+                    tryDamageNPCs(state.me.x, state.me.y, 500, 65);
+                    spawnParticles(state.me.x, state.me.y, 60, '#c026d3');
+                    socket.emit('abilityUsed', { type: 'soulrip', x: state.me.x, y: state.me.y, id: myId });
+                    showToast('SOUL NOVA!', 'mythic'); used = true; break;
+                case 'chainlaser':
+                    // Laser that bounces between nearby enemies
+                    const clAngle = state.me.angle;
+                    const clX = state.me.x, clY = state.me.y;
+                    state.laserBeams.push({ x1: clX, y1: clY, x2: clX+Math.cos(clAngle)*1000, y2: clY+Math.sin(clAngle)*1000, life: 1 });
+                    socket.emit('abilityUsed', { type: 'laserbeam', x: clX, y: clY, x2: clX+Math.cos(clAngle)*1000, y2: clY+Math.sin(clAngle)*1000, id: myId });
+                    for (let id in state.players) {
+                        const p = state.players[id];
+                        if (Math.sqrt((clX-p.x)**2+(clY-p.y)**2) < 600) { hitPlayer(id, 35); spawnParticles(p.x,p.y,12,'#22d3ee'); }
+                    }
+                    tryDamageBoss(clX, clY, 600, 35); tryDamageNPCs(clX, clY, 600, 35);
+                    showToast('CHAIN LASER!', 'mythic'); used = true; break;
+                case 'detonator':
+                    // Place 3 instant bombs at cursor in a spread
+                    const detX = state.mouse.worldX, detY = state.mouse.worldY;
+                    [-80, 0, 80].forEach((offset, i) => {
+                        const bx = detX + offset, by = detY + offset * 0.5;
+                        state.explosions.push({ x: bx, y: by, radius: 30, maxRadius: 220, life: 0.8, color: '#f97316' });
+                        for (let j = 0; j < 25; j++) spawnParticles(bx, by, 1, '#f97316');
+                        for (let id in state.players) {
+                            if (Math.sqrt((bx-state.players[id].x)**2+(by-state.players[id].y)**2) < 220) hitPlayer(id, 45);
+                        }
+                        tryDamageBoss(bx, by, 220, 45); tryDamageNPCs(bx, by, 220, 45);
+                    });
+                    socket.emit('abilityUsed', { type: 'nuke', x: detX, y: detY, id: myId });
+                    showToast('DETONATOR!', 'mythic'); used = true; break;
+                case 'phantomstep':
+                    // Blink through all enemies in facing direction, damaging each
+                    const psAngle = state.me.angle;
+                    const psStep = 80;
+                    for (let step = 0; step < 8; step++) {
+                        const px = state.me.x + Math.cos(psAngle) * psStep * step;
+                        const py = state.me.y + Math.sin(psAngle) * psStep * step;
+                        spawnParticles(px, py, 8, '#8b5cf6');
+                        for (let id in state.players) {
+                            if (Math.sqrt((px-state.players[id].x)**2+(py-state.players[id].y)**2) < 60) { hitPlayer(id, 20); }
+                        }
+                    }
+                    state.me.x += Math.cos(psAngle)*600; state.me.y += Math.sin(psAngle)*600;
+                    state.me.x = Math.max(25, Math.min(CONFIG.map.width-25, state.me.x));
+                    state.me.y = Math.max(25, Math.min(CONFIG.map.height-25, state.me.y));
+                    spawnParticles(state.me.x, state.me.y, 30, '#8b5cf6');
+                    tryDamageBoss(state.me.x, state.me.y, 200, 30); tryDamageNPCs(state.me.x, state.me.y, 200, 30);
+                    socket.emit('abilityUsed', { type: 'shadowclone', x: state.me.x, y: state.me.y, id: myId });
+                    showToast('PHANTOM STEP!', 'mythic'); used = true; break;
+                case 'stormwall':
+                    // Electric barrier for 8 seconds - zaps nearby attackers and damages them
+                    state.mirrorActive = true;
+                    state.omegaTimer = 8;
+                    for (let i = 0; i < 8; i++) {
+                        const sa = (i/8)*Math.PI*2;
+                        spawnParticles(state.me.x+Math.cos(sa)*60, state.me.y+Math.sin(sa)*60, 5, '#60a5fa');
+                    }
+                    state.explosions.push({ x: state.me.x, y: state.me.y, radius: 20, maxRadius: 100, life: 0.6, color: '#60a5fa' });
+                    // Also damage nearby immediately on activation
+                    for (let id in state.players) {
+                        if (Math.sqrt((state.me.x-state.players[id].x)**2+(state.me.y-state.players[id].y)**2) < 120) hitPlayer(id, 25);
+                    }
+                    socket.emit('abilityUsed', { type: 'emp', x: state.me.x, y: state.me.y, id: myId });
+                    updateScreenEffects();
+                    showToast('STORM WALL ACTIVE! (8s)', 'mythic'); used = true; break;
                 // ADMIN POWERS - ACTUALLY DEVASTATING
                 case 'apocalypse':
                     // Screen-wide devastation - pre-generate positions for sync
@@ -5119,6 +5255,7 @@
             state.me.currentPower = state.inventory[state.activeSlot];
             updateInventoryUI(); broadcastState();
             showToast(`Dropped ${powerInfo.name}!`, 'mythic');
+            if (craftModalOpen) renderCraftRecipes();
         }
 
         function recallBaby() {
