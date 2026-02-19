@@ -793,6 +793,112 @@
             letter-spacing: 0.5px;
         }
         #stamina-notif.visible { opacity: 1; }
+
+        /* ── Minimap ── */
+        #minimap-container {
+            position: fixed; bottom: 20px; right: 20px; z-index: 200;
+            display: none; flex-direction: column; align-items: flex-end; gap: 6px;
+            pointer-events: none;
+        }
+        #minimap-container.ingame { display: flex; }
+        #minimap-legend {
+            background: rgba(0,0,0,0.7); border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 8px; padding: 4px 8px;
+            font-size: 0.58rem; font-weight: 700; color: rgba(255,255,255,0.7);
+            display: flex; gap: 8px; letter-spacing: 0.3px;
+        }
+        .mm-legend-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 3px; vertical-align: middle; }
+        #minimap-canvas {
+            border-radius: 10px; border: 1.5px solid rgba(0,242,254,0.25);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+            background: rgba(10,15,30,0.88);
+        }
+
+        /* ── Kill Feed ── */
+        #kill-feed {
+            position: fixed; right: 20px; bottom: 220px;
+            z-index: 200; pointer-events: none; display: none;
+            flex-direction: column; gap: 4px; align-items: flex-end;
+            max-height: 200px; overflow: hidden;
+        }
+        #kill-feed.ingame { display: flex; }
+        .kill-feed-entry {
+            background: rgba(0,0,0,0.72); border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px; padding: 5px 10px; font-size: 0.75rem; font-weight: 700;
+            color: rgba(255,255,255,0.85); animation: kfSlideIn 0.25s ease-out;
+            white-space: nowrap; max-width: 220px;
+        }
+        .kill-feed-entry .kf-killer { color: #00f2fe; }
+        .kill-feed-entry .kf-victim { color: #ef4444; }
+        .kill-feed-entry .kf-sep { color: rgba(255,255,255,0.4); margin: 0 4px; }
+        .kill-feed-entry.fading { opacity: 0; transition: opacity 0.6s; }
+        @keyframes kfSlideIn { from { transform: translateX(20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+        /* ── Crafting ── */
+        #craft-toggle-btn {
+            position: fixed; right: 12px; top: calc(50% + 100px); transform: translateY(-50%);
+            width: 40px; height: 40px; border-radius: 50%;
+            background: rgba(8,8,18,0.9); border: 2px solid rgba(245,158,11,0.4);
+            font-size: 18px; cursor: pointer; display: none; align-items: center; justify-content: center;
+            z-index: 301; transition: all 0.2s; pointer-events: auto;
+        }
+        #craft-toggle-btn.ingame { display: flex; }
+        #craft-toggle-btn:hover { transform: translateY(-50%) scale(1.12); border-color: #f59e0b; }
+
+        #craft-modal {
+            position: fixed; right: 60px; top: 50%; transform: translateY(-30%);
+            z-index: 400; pointer-events: auto; display: none;
+            width: 310px;
+        }
+        #craft-modal.visible { display: block; animation: slideUp 0.2s ease-out; }
+        #craft-modal .craft-header {
+            font-size: 1rem; font-weight: 800; color: #f59e0b; margin-bottom: 12px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .recipe-item {
+            background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px; padding: 10px 12px; margin-bottom: 8px; cursor: pointer;
+            transition: all 0.18s;
+        }
+        .recipe-item:hover { border-color: rgba(245,158,11,0.4); background: rgba(245,158,11,0.06); }
+        .recipe-item .recipe-name {
+            font-size: 0.88rem; font-weight: 800; margin-bottom: 4px; display: flex; justify-content: space-between; align-items: center;
+        }
+        .recipe-item .recipe-ingredients {
+            font-size: 0.72rem; color: rgba(255,255,255,0.5);
+        }
+        .recipe-item .recipe-status {
+            font-size: 0.65rem; font-weight: 900; text-transform: uppercase; padding: 2px 7px;
+            border-radius: 6px; letter-spacing: 0.4px;
+        }
+        .recipe-item .recipe-status.can-craft { background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.3); }
+        .recipe-item .recipe-status.cannot-craft { background: rgba(239,68,68,0.1); color: #f87171; border: 1px solid rgba(239,68,68,0.2); }
+        .recipe-expanded {
+            display: none; margin-top: 8px; border-top: 1px solid rgba(255,255,255,0.07); padding-top: 8px;
+        }
+        .recipe-expanded.visible { display: block; }
+        .recipe-ing-row {
+            display: flex; justify-content: space-between; align-items: center;
+            font-size: 0.72rem; padding: 2px 0;
+        }
+        .recipe-ing-row .ing-name { color: rgba(255,255,255,0.7); }
+        .recipe-ing-row .ing-have { font-weight: 700; }
+        .recipe-ing-row .ing-have.ok { color: #34d399; }
+        .recipe-ing-row .ing-have.miss { color: #f87171; }
+        .recipe-craft-btn {
+            margin-top: 8px; width: 100%; background: linear-gradient(135deg,#f59e0b,#ef4444);
+            border: none; border-radius: 7px; padding: 7px; color: #0f172a;
+            font-weight: 900; font-size: 0.8rem; cursor: pointer; text-transform: uppercase;
+            letter-spacing: 0.5px; transition: filter 0.2s;
+        }
+        .recipe-craft-btn:hover:not(:disabled) { filter: brightness(1.15); }
+        .recipe-craft-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        /* ── Death screen killer line ── */
+        #death-killer-line {
+            margin-top: 14px; font-size: 1.1rem; color: rgba(255,255,255,0.7); font-weight: 600;
+        }
+        #death-killer-line span { color: #00f2fe; font-weight: 900; }
     </style>
 </head>
 <body>
@@ -889,7 +995,7 @@
                 <button class="admin-btn" id="infinite-btn" onclick="adminAction('toggle_infinite')">Infinite Power: OFF</button>
             </div>
             <div class="admin-section">
-                <div class="admin-section-title">UNRELEASED ADMIN POWERS</div>
+                <div class="admin-section-title">Omega Power</div>
                 <div class="power-grid" id="admin-omega-grid"></div>
             </div>
             <div class="admin-section">
@@ -973,6 +1079,7 @@
 
     <div id="death-screen">
         <div class="death-text">WASTED</div>
+        <div id="death-killer-line" style="display:none;">Wasted by <span id="death-killer-name">Unknown</span></div>
         <div class="respawn-timer">Respawning in <span id="respawn-countdown">3</span>...</div>
     </div>
 
@@ -1036,6 +1143,29 @@
 
     <div id="stamina-notif">Stamina Depleted</div>
     <div id="npc-announce"></div>
+
+    <!-- Minimap -->
+    <div id="minimap-container">
+        <div id="minimap-legend">
+            <span><span class="mm-legend-dot" style="background:#4facfe;"></span>Player</span>
+            <span><span class="mm-legend-dot" style="background:#ef4444;"></span>Bosses</span>
+            <span><span class="mm-legend-dot" style="background:#22c55e;"></span>NPCs</span>
+        </div>
+        <canvas id="minimap-canvas" width="160" height="160"></canvas>
+    </div>
+
+    <!-- Kill Feed -->
+    <div id="kill-feed"></div>
+
+    <!-- Craft Button (below emote button) -->
+    <button id="craft-toggle-btn" onclick="toggleCraftModal()" title="Crafting">⚗️</button>
+
+    <!-- Craft Modal -->
+    <div id="craft-modal" class="glass-panel">
+        <div class="craft-header">⚗️ Crafting</div>
+        <div id="craft-recipes-list"></div>
+    </div>
+
     <button id="emote-toggle-btn" onclick="toggleEmoteWheel()" title="Emotes (E)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="#00f2fe" stroke-width="2" fill="rgba(0,242,254,0.15)" stroke-linejoin="round"/><circle cx="9" cy="10" r="1.2" fill="#00f2fe"/><circle cx="15" cy="10" r="1.2" fill="#00f2fe"/><path d="M8 13 Q12 16 16 13" stroke="#00f2fe" stroke-width="1.5" stroke-linecap="round" fill="none"/></svg></button>
     <div id="emote-hint">E key</div>
     <div id="emote-wheel">
@@ -1664,23 +1794,22 @@
                 }
             }
             
-            // Admin-only omega powers grid
+            // Omega power grid (only the omega power, no admin powers)
             const omegaGrid = document.getElementById('admin-omega-grid');
             if (omegaGrid) {
                 omegaGrid.innerHTML = '';
-                for (let key in ADMIN_POWERS) {
-                    const p = ADMIN_POWERS[key];
+                for (let key in OMEGA_POWER) {
+                    const p = OMEGA_POWER[key];
                     omegaGrid.innerHTML += `<button class="power-grid-btn" onclick="adminGivePower('${key}')" style="border-color:${p.color}; background: rgba(255,215,0,0.1);"><span style="color:${p.color};">${p.name.charAt(0)}</span><span>${p.name}</span></button>`;
                 }
             }
             
-            // Spawn power select (regular + admin powers)
+            // Spawn power select (regular + omega only, no admin powers)
             const select = document.getElementById('spawn-power-select');
             if (select) {
                 select.innerHTML = '<option value="">Select...</option>';
                 for (let key in POWERS) select.innerHTML += `<option value="${key}">${POWERS[key].name}</option>`;
-                select.innerHTML += '<option disabled>── Admin Powers ──</option>';
-                for (let key in ADMIN_POWERS) select.innerHTML += `<option value="${key}">${ADMIN_POWERS[key].name}</option>`;
+                for (let key in OMEGA_POWER) select.innerHTML += `<option value="${key}">${OMEGA_POWER[key].name}</option>`;
             }
         }
 
@@ -1970,6 +2099,13 @@
                 
                 updateKillCounter();
                 
+                // Show in-game HUD elements
+                document.getElementById('minimap-container').classList.add('ingame');
+                document.getElementById('kill-feed').classList.add('ingame');
+                document.getElementById('craft-toggle-btn').classList.add('ingame');
+                document.getElementById('emote-toggle-btn').classList.add('ingame');
+                document.getElementById('emote-hint').classList.add('ingame');
+                
                 // Start game loop here after player data is loaded
                 if (!state.running) {
                     state.running = true;
@@ -2128,6 +2264,10 @@
                     state.me.hp = 0;
                     handleDeath(data.killerId);
                 }
+                // Kill feed
+                const victimName = data.victimId === myId ? (state.me ? state.me.name : 'You') : (state.players[data.victimId] ? state.players[data.victimId].name : null);
+                const killerName = data.killerId === myId ? (state.me ? state.me.name : 'You') : (state.players[data.killerId] ? state.players[data.killerId].name : null);
+                if (victimName && killerName && victimName !== killerName) addKillFeedEntry(killerName, victimName);
                 if (state.players[data.victimId]) {
                     state.players[data.victimId].hp = 0;
                     spawnParticles(state.players[data.victimId].x, state.players[data.victimId].y, 30, '#ef4444');
@@ -2519,6 +2659,18 @@
         function handleDeath(killerId) {
             state.isDead = true; state.respawnTimer = 3;
             document.getElementById('death-screen').classList.add('active');
+            // Show killer name
+            const killerEl = document.getElementById('death-killer-line');
+            const killerNameEl = document.getElementById('death-killer-name');
+            if (killerEl && killerNameEl) {
+                if (killerId && killerId !== myId) {
+                    const killerName = (state.players[killerId] && state.players[killerId].name) ? state.players[killerId].name : 'Unknown';
+                    killerNameEl.textContent = killerName;
+                    killerEl.style.display = 'block';
+                } else {
+                    killerEl.style.display = 'none';
+                }
+            }
             state.omegaUnlocked = false; state.omegaPower = null;
             state.speedActive = false; state.phaseActive = false; state.berserkerActive = false;
             state.mirrorActive = false; state.timestopActive = false; state.clones = []; state.cloneTimer = 0;
@@ -3004,6 +3156,7 @@
             if (state.me.recoil > 0) state.me.recoil -= dt * 30;
             if (Math.random() < 0.1) updateLeaderboard();
             updateInventoryUI(); // update cooldown display every frame
+            drawMinimap();
             
             // Baby update
             if (state.baby) {
@@ -3853,6 +4006,187 @@
                     btn.innerHTML = key && EMOTE_SVG_STRS[key] ? EMOTE_SVG_STRS[key] : '';
                 }
             }
+        }
+
+        // ── MINIMAP ──────────────────────────────────────────────────
+        function drawMinimap() {
+            if (!state.running || !state.me) return;
+            const mc = document.getElementById('minimap-canvas');
+            if (!mc) return;
+            const mx = mc.getContext('2d');
+            const W = mc.width, H = mc.height;
+            const mapW = CONFIG.map.width, mapH = CONFIG.map.height;
+            const scaleX = W / mapW, scaleY = H / mapH;
+            mx.clearRect(0, 0, W, H);
+            // Background grid dots
+            mx.fillStyle = 'rgba(30,41,59,0.95)';
+            mx.fillRect(0, 0, W, H);
+            mx.fillStyle = 'rgba(255,255,255,0.04)';
+            for (let gx = 0; gx < W; gx += 16) for (let gy = 0; gy < H; gy += 16) {
+                mx.fillRect(gx, gy, 1, 1);
+            }
+            // Map border
+            mx.strokeStyle = 'rgba(0,242,254,0.15)'; mx.lineWidth = 1;
+            mx.strokeRect(1, 1, W-2, H-2);
+            // NPCs
+            for (const nid in state.npcs) {
+                const n = state.npcs[nid];
+                if (!n || (n.hp !== undefined && n.hp <= 0)) continue;
+                mx.fillStyle = '#22c55e';
+                mx.beginPath(); mx.arc(n.x * scaleX, n.y * scaleY, 1.5, 0, Math.PI*2); mx.fill();
+            }
+            // Bosses
+            for (const bid in state.bosses) {
+                const b = state.bosses[bid];
+                if (!b) continue;
+                const bx = (b.targetX||b.x||0)*scaleX, by = (b.targetY||b.y||0)*scaleY;
+                mx.fillStyle = '#ef4444';
+                mx.shadowBlur = 6; mx.shadowColor = '#ef4444';
+                mx.beginPath(); mx.arc(bx, by, 4, 0, Math.PI*2); mx.fill();
+                mx.shadowBlur = 0;
+            }
+            // Other players
+            for (const pid in state.players) {
+                const p = state.players[pid];
+                if (!p || p.hp <= 0) continue;
+                mx.fillStyle = '#4facfe';
+                mx.beginPath(); mx.arc(p.x*scaleX, p.y*scaleY, 2.5, 0, Math.PI*2); mx.fill();
+            }
+            // Me
+            if (state.me && !state.isDead) {
+                const pulse = Math.sin(Date.now()/400)*0.3+0.7;
+                mx.fillStyle = '#ffffff';
+                mx.shadowBlur = 8*pulse; mx.shadowColor = '#00f2fe';
+                mx.beginPath(); mx.arc(state.me.x*scaleX, state.me.y*scaleY, 3.5, 0, Math.PI*2); mx.fill();
+                mx.shadowBlur = 0;
+                // Triangle pointing in my direction
+                mx.save();
+                mx.translate(state.me.x*scaleX, state.me.y*scaleY);
+                mx.rotate(state.me.angle);
+                mx.fillStyle = '#00f2fe';
+                mx.beginPath(); mx.moveTo(7,0); mx.lineTo(-4,-3); mx.lineTo(-4,3); mx.closePath(); mx.fill();
+                mx.restore();
+            }
+        }
+
+        // ── KILL FEED ──────────────────────────────────────────────────
+        function addKillFeedEntry(killer, victim) {
+            const feed = document.getElementById('kill-feed');
+            if (!feed) return;
+            const entry = document.createElement('div');
+            entry.className = 'kill-feed-entry';
+            entry.innerHTML = `<span class="kf-killer">${escapeHtml(killer)}</span><span class="kf-sep">☠</span><span class="kf-victim">${escapeHtml(victim)}</span>`;
+            feed.appendChild(entry);
+            // Keep max 6 entries
+            while (feed.children.length > 6) feed.removeChild(feed.firstChild);
+            // Fade out after 5s
+            setTimeout(() => {
+                entry.classList.add('fading');
+                setTimeout(() => entry.remove(), 600);
+            }, 5000);
+        }
+
+        // ── CRAFTING SYSTEM ──────────────────────────────────────────
+        const CRAFT_RECIPES = [
+            { result: 'shockwave', ingredients: ['dash', 'dash'], label: 'Shockwave', desc: '2× Dash' },
+            { result: 'blackhole', ingredients: ['emp', 'emp'], label: 'Blackhole', desc: '2× EMP' },
+            { result: 'orbitallaser', ingredients: ['laser', 'laser'], label: 'Orbital Laser', desc: '2× Laser' },
+            { result: 'frostnova', ingredients: ['freeze', 'freeze'], label: 'Frost Nova', desc: '2× Freeze' },
+            { result: 'soulrip', ingredients: ['vampire', 'vampire'], label: 'Soul Rip', desc: '2× Vampire' },
+            { result: 'chaos', ingredients: ['lightning', 'lightning'], label: 'Chaos Orb', desc: '2× Lightning' },
+            { result: 'nuke', ingredients: ['rocket', 'explosive'], label: 'Nuke', desc: 'Rocket + Explosive' },
+            { result: 'gravitypull', ingredients: ['blackhole', 'magnet'], label: 'Gravity Pull', desc: 'Blackhole + Magnet' },
+            { result: 'voidbeam', ingredients: ['laser', 'sniper'], label: 'Void Beam', desc: 'Laser + Sniper' },
+            { result: 'timebomb', ingredients: ['explosive', 'freeze'], label: 'Time Bomb', desc: 'Explosive + Freeze' },
+            { result: 'shadowclone', ingredients: ['clone', 'phase'], label: 'Shadow Clone', desc: 'Clone + Phase' },
+            { result: 'phoenix', ingredients: ['regeneration', 'heal'], label: 'Phoenix', desc: 'Regen + Heal' },
+        ];
+
+        let craftModalOpen = false;
+        function toggleCraftModal() {
+            craftModalOpen = !craftModalOpen;
+            const modal = document.getElementById('craft-modal');
+            if (craftModalOpen) {
+                renderCraftRecipes();
+                modal.classList.add('visible');
+            } else {
+                modal.classList.remove('visible');
+            }
+        }
+
+        function renderCraftRecipes() {
+            const list = document.getElementById('craft-recipes-list');
+            if (!list) return;
+            list.innerHTML = '';
+            // Count all items across all inventory slots
+            const invCounts = {};
+            for (let s = 0; s < 3; s++) {
+                const p = state.inventory[s];
+                if (p) invCounts[p] = (invCounts[p] || 0) + 1;
+            }
+            CRAFT_RECIPES.forEach((recipe, idx) => {
+                const resultInfo = ALL_POWERS[recipe.result];
+                if (!resultInfo) return;
+                // Check if we have all ingredients
+                const needed = {};
+                recipe.ingredients.forEach(ing => { needed[ing] = (needed[ing] || 0) + 1; });
+                const canCraft = Object.entries(needed).every(([ing, count]) => (invCounts[ing] || 0) >= count);
+                const div = document.createElement('div');
+                div.className = 'recipe-item';
+                div.innerHTML = `
+                    <div class="recipe-name">
+                        <span style="color:${resultInfo.color};">${recipe.label}</span>
+                        <span class="recipe-status ${canCraft ? 'can-craft' : 'cannot-craft'}">${canCraft ? 'Ready' : 'Need More'}</span>
+                    </div>
+                    <div class="recipe-ingredients">📦 ${recipe.desc}</div>
+                    <div class="recipe-expanded" id="recipe-exp-${idx}">
+                        ${Object.entries(needed).map(([ing, count]) => {
+                            const have = invCounts[ing] || 0;
+                            const ok = have >= count;
+                            const ingInfo = ALL_POWERS[ing];
+                            return `<div class="recipe-ing-row"><span class="ing-name">${ingInfo ? ingInfo.name : ing}</span><span class="ing-have ${ok ? 'ok' : 'miss'}">${have}/${count}</span></div>`;
+                        }).join('')}
+                        <button class="recipe-craft-btn" ${canCraft ? '' : 'disabled'} onclick="doCraft(${idx})">Craft ${recipe.label}</button>
+                    </div>
+                `;
+                div.querySelector('.recipe-name').addEventListener('click', () => {
+                    const exp = document.getElementById('recipe-exp-' + idx);
+                    exp.classList.toggle('visible');
+                });
+                list.appendChild(div);
+            });
+        }
+
+        function doCraft(recipeIdx) {
+            const recipe = CRAFT_RECIPES[recipeIdx];
+            if (!recipe) return;
+            // Count inventory
+            const needed = {};
+            recipe.ingredients.forEach(ing => { needed[ing] = (needed[ing] || 0) + 1; });
+            // Check again
+            const invCopy = [...state.inventory];
+            for (const [ing, count] of Object.entries(needed)) {
+                let removed = 0;
+                for (let s = 0; s < 3; s++) {
+                    if (invCopy[s] === ing && removed < count) { invCopy[s] = null; removed++; }
+                }
+                if (removed < count) { showToast('Missing ingredients!', 'warning'); return; }
+            }
+            // Place result in first empty slot
+            let placed = false;
+            for (let s = 0; s < 3; s++) {
+                if (invCopy[s] === null) { invCopy[s] = recipe.result; placed = true; break; }
+            }
+            if (!placed) { invCopy[0] = recipe.result; } // replace slot 0 if all full
+            state.inventory = invCopy;
+            state.me.currentPower = state.inventory[state.activeSlot];
+            updateInventoryUI(); broadcastState();
+            const resultInfo = ALL_POWERS[recipe.result];
+            showToast(`Crafted ${resultInfo.name}!`, resultInfo.rarity === 'legendary' ? 'mythic' : resultInfo.rarity);
+            spawnParticles(state.me.x, state.me.y, 20, resultInfo.color);
+            // Close modal
+            craftModalOpen = false;
+            document.getElementById('craft-modal').classList.remove('visible');
         }
 
         // ──────────────────────────────────────────────────────────
