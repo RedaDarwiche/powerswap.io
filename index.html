@@ -3465,7 +3465,8 @@
             if (npc.rarity === 'mythic' || npc.rarity === 'legendary') {
                 const auraR = r + 20 + Math.sin(Date.now()/200)*8;
                 const grad = ctx.createRadialGradient(0,0,r,0,0,auraR);
-                grad.addColorStop(0, color.replace(')', ',0.35)').replace('rgb','rgba').replace('#', 'rgba(').replace(/rgba\(([\da-f]{2})([\da-f]{2})([\da-f]{2}),/, (m,r,g,b) => 'rgba('+parseInt(r,16)+','+parseInt(g,16)+','+parseInt(b,16)+','));
+                const hexToRgba = (hex, a) => { const n = parseInt(hex.slice(1), 16); return `rgba(${(n>>16)&255},${(n>>8)&255},${n&255},${a})`; };
+                grad.addColorStop(0, hexToRgba(color, 0.35));
                 grad.addColorStop(1, 'transparent');
                 ctx.fillStyle = color + '44';
                 ctx.beginPath(); ctx.arc(0,0,auraR,0,Math.PI*2); ctx.fill();
