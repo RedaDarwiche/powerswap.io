@@ -2033,14 +2033,24 @@
             socket.on('playerJoined', p => { if (p.id !== myId) { state.players[p.id] = { ...p, targetX: p.x, targetY: p.y, kills: p.kills || 0 }; } });
             socket.on('playerLeft', id => { delete state.players[id]; delete state.remoteClones[id]; if (state.remoteBabies) delete state.remoteBabies[id]; });
 
+            // Fast HP sync from other players — update their health bar immediately
+            socket.on('hpSync', data => {
+                if (!data || !data.id || data.id === myId) return;
+                if (state.players[data.id]) {
+                    state.players[data.id].hp = data.hp;
+                }
+            });
+
             socket.on('playerMoved', (data) => {
                 if (data.id !== myId && state.players[data.id]) {
                     const p = state.players[data.id];
                     p.targetX = data.x; p.targetY = data.y; p.angle = data.angle;
                     if (data.currentPower !== undefined) p.currentPower = data.currentPower;
-                    if (data.kills !== undefined) p.kills = data.kills;
-                    // Always accept HP from playerMoved — victim broadcasts their real HP after taking damage
                     if (data.hp !== undefined) p.hp = data.hp;
+                    if (data.kills !== undefined && data.kills !== p.kills) {
+                        p.kills = data.kills;
+                        updateLeaderboard();
+                    }
                     if (data.speedActive !== undefined) p.speedActive = data.speedActive;
                     if (data.berserkerActive !== undefined) p.berserkerActive = data.berserkerActive;
                     if (data.phaseActive !== undefined) p.phaseActive = data.phaseActive;
@@ -2286,7 +2296,8 @@
                             socket.emit('playerDied', { victimId: myId, killerId: data.attackerId });
                         }
                     } else {
-                        // Broadcast updated HP so attackers see the health bar change
+                        // Broadcast updated HP so attackers see the health bar change immediately
+                        socket.emit('hpSync', { hp: state.me.hp });
                         broadcastState();
                     }
                 }
@@ -3133,7 +3144,9 @@
                 }
             }
             if (state.me.recoil > 0) state.me.recoil -= dt * 30;
-            if (Math.random() < 0.1) updateLeaderboard();
+            if (!state._lbTimer) state._lbTimer = 0;
+            state._lbTimer += dt;
+            if (state._lbTimer > 0.5) { state._lbTimer = 0; updateLeaderboard(); }
             updateInventoryUI(); // update cooldown display every frame
             drawMinimap();
             
