@@ -692,7 +692,7 @@
         #emote-toggle-btn.ingame { display: flex; }
         #emote-toggle-btn:hover { transform: translateY(-50%) scale(1.12); border-color: #00f2fe; }
         #craft-toggle-btn {
-            position: fixed; right: 12px; top: calc(50% + 46px);
+            position: fixed; right: 12px; top: calc(50% + 24px);
             width: 40px; height: 40px; border-radius: 50%;
             background: rgba(8,8,18,0.9); border: 2px solid rgba(245,158,11,0.4);
             font-size: 18px; cursor: pointer; display: none; align-items: center; justify-content: center;
@@ -2098,7 +2098,11 @@
                     p.targetX = data.x; p.targetY = data.y; p.angle = data.angle;
                     if (data.currentPower !== undefined) p.currentPower = data.currentPower;
                     if (data.kills !== undefined) p.kills = data.kills;
-                    if (data.hp !== undefined) p.hp = data.hp;
+                    // Only accept HP from playerMoved if it's HIGHER than what we have locally
+                    // (victim healing/respawning) — never let it reset damage we applied
+                    if (data.hp !== undefined) {
+                        if (p.hp === undefined || data.hp > p.hp) p.hp = data.hp;
+                    }
                     if (data.speedActive !== undefined) p.speedActive = data.speedActive;
                     if (data.berserkerActive !== undefined) p.berserkerActive = data.berserkerActive;
                     if (data.phaseActive !== undefined) p.phaseActive = data.phaseActive;
