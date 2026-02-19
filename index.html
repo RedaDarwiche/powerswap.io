@@ -1175,6 +1175,14 @@
         })();
         const NPC_COLORS = { common:'#9ca3af', rare:'#3b82f6', epic:'#a855f7', legendary:'#f59e0b', mythic:'#ff00cc' };
         const NPC_RADII  = { common:18, rare:20, epic:23, legendary:27, mythic:32 };
+        function hexToRgba(hex, alpha) {
+            hex = (hex || '#ffffff').replace('#','');
+            if (hex.length === 3) hex = hex[0]+hex[0]+hex[1]+hex[1]+hex[2]+hex[2];
+            const r = parseInt(hex.substring(0,2),16);
+            const g = parseInt(hex.substring(2,4),16);
+            const b = parseInt(hex.substring(4,6),16);
+            return `rgba(${r},${g},${b},${alpha})`;
+        }
         let sbClient = null, currentUser = null, dbUsername = '', isAdmin = false;
         let socket = null, myId = null, isConnecting = false, connectionAttempts = 0;
         let powerupIdCounter = 10000, projectileIdCounter = 50000;
@@ -1861,6 +1869,14 @@
         showToast(data.message || 'This account is already playing!', 'error');
         socket.disconnect();
         socket = null;
+    });
+
+    socket.on('forceDisconnect', (data) => {
+        showToast(data.message || 'You were disconnected.', 'warning');
+        state.running = false;
+        socket.disconnect();
+        socket = null;
+        document.getElementById('main-menu').style.display = '';
     });
 
     socket.on('joinSuccess', () => {
@@ -3438,9 +3454,9 @@
             if (npc.rarity === 'mythic' || npc.rarity === 'legendary') {
                 const auraR = r + 20 + Math.sin(Date.now()/200)*8;
                 const grad = ctx.createRadialGradient(0,0,r,0,0,auraR);
-                grad.addColorStop(0, color.replace(')', ',0.35)').replace('rgb','rgba').replace('#', 'rgba(').replace(/rgba\(([\da-f]{2})([\da-f]{2})([\da-f]{2}),/, (m,r,g,b) => 'rgba('+parseInt(r,16)+','+parseInt(g,16)+','+parseInt(b,16)+','));
+                grad.addColorStop(0, hexToRgba(color, 0.35));
                 grad.addColorStop(1, 'transparent');
-                ctx.fillStyle = color + '44';
+                ctx.fillStyle = hexToRgba(color, 0.27);
                 ctx.beginPath(); ctx.arc(0,0,auraR,0,Math.PI*2); ctx.fill();
             }
             // Body
