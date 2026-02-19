@@ -2210,6 +2210,7 @@
                 if (data.playerId === myId) return; // we track our own kills locally
                 if (state.players[data.playerId]) {
                     state.players[data.playerId].kills = data.kills;
+                    updateLeaderboard(); // immediately refresh so other players' kills show
                 }
             });
 
@@ -2224,6 +2225,18 @@
                     state.players[data.victimId].kills = 0;
                     delete state.remoteClones[data.victimId];
                     if (state.remoteBabies) delete state.remoteBabies[data.victimId];
+                    // Restore HP after short delay — server respawns them instantly
+                    setTimeout(() => {
+                        if (state.players[data.victimId]) {
+                            state.players[data.victimId].hp = 100;
+                            // Reset interpolation so they don't ghost at old position
+                            if (state.players[data.victimId].targetX !== undefined) {
+                                state.players[data.victimId].x = state.players[data.victimId].targetX;
+                                state.players[data.victimId].y = state.players[data.victimId].targetY;
+                            }
+                        }
+                    }, 500);
+                    updateLeaderboard();
                 }
                 if (data.killerId === myId && data.victimId !== myId) {
                     state.kills++;
@@ -3214,7 +3227,7 @@
             ctx.translate(-state.camera.x, -state.camera.y);
 
             // Render distance: only draw objects within visible viewport + margin
-            const RENDER_MARGIN = 300;
+            const RENDER_MARGIN = 600;
             const viewLeft   = state.camera.x - RENDER_MARGIN;
             const viewRight  = state.camera.x + canvas.width  + RENDER_MARGIN;
             const viewTop    = state.camera.y - RENDER_MARGIN;
@@ -3306,7 +3319,11 @@
                 if (inView(npc.x, npc.y, 80)) drawNPC(npc);
             }
             for (let id in state.players) {
-                if (state.players[id].hp > 0 && inView(state.players[id].x, state.players[id].y, 60)) drawPlayer(state.players[id], false, false);
+                const p = state.players[id];
+                if (!p) continue;
+                const checkX = p.targetX !== undefined ? p.targetX : p.x;
+                const checkY = p.targetY !== undefined ? p.targetY : p.y;
+                if (p.hp > 0 && inView(checkX, checkY, 60)) drawPlayer(p, false, false);
             }
             if (state.me && !state.isDead) drawPlayer(state.me, true, false);
             // Draw emote bubbles above players
@@ -3987,40 +4004,33 @@
             // Background
             mx.fillStyle = 'rgba(10,15,30,0.95)';
             mx.fillRect(0, 0, W, H);
-            // Subtle grid
-            mx.fillStyle = 'rgba(255,255,255,0.03)';
-            for (let gx = 0; gx < W; gx += 16) for (let gy = 0; gy < H; gy += 16) {
-                mx.fillRect(gx, gy, 1, 1);
-            }
             // Map border
-            mx.strokeStyle = 'rgba(0,242,254,0.2)'; mx.lineWidth = 1;
+            mx.strokeStyle = 'rgba(0,242,254,0.3)'; mx.lineWidth = 1;
             mx.strokeRect(0.5, 0.5, W-1, H-1);
-            // NPCs — small green circles
+            // NPCs — small green dots
+            mx.fillStyle = '#22c55e';
             for (const nid in state.npcs) {
                 const n = state.npcs[nid];
-                if (!n || (n.hp !== undefined && n.hp <= 0)) continue;
-                mx.fillStyle = '#22c55e';
+                if (!n || n.hp <= 0) continue;
                 mx.beginPath(); mx.arc(n.x * scaleX, n.y * scaleY, 2, 0, Math.PI*2); mx.fill();
             }
-            // Bosses — red circles with glow
+            // Bosses — red dots
+            mx.shadowBlur = 8; mx.shadowColor = '#ef4444';
+            mx.fillStyle = '#ef4444';
             for (const bid in state.bosses) {
                 const b = state.bosses[bid];
                 if (!b) continue;
-                const bx = (b.targetX || b.x || 0) * scaleX;
-                const by = (b.targetY || b.y || 0) * scaleY;
-                mx.shadowBlur = 8; mx.shadowColor = '#ef4444';
-                mx.fillStyle = '#ef4444';
-                mx.beginPath(); mx.arc(bx, by, 4, 0, Math.PI*2); mx.fill();
-                mx.shadowBlur = 0;
+                mx.beginPath(); mx.arc(b.x * scaleX, b.y * scaleY, 4, 0, Math.PI*2); mx.fill();
             }
-            // Other players — blue circles
+            mx.shadowBlur = 0;
+            // Other players — blue dots
+            mx.fillStyle = '#4facfe';
             for (const pid in state.players) {
                 const p = state.players[pid];
                 if (!p || p.hp <= 0) continue;
-                mx.fillStyle = '#4facfe';
                 mx.beginPath(); mx.arc(p.x * scaleX, p.y * scaleY, 3, 0, Math.PI*2); mx.fill();
             }
-            // Me — white circle with cyan glow
+            // Me — white dot with cyan glow
             if (state.me && !state.isDead) {
                 mx.shadowBlur = 10; mx.shadowColor = '#00f2fe';
                 mx.fillStyle = '#ffffff';
