@@ -1853,7 +1853,7 @@
                 x: state.me.x, y: state.me.y, angle: state.me.angle, kills: state.kills,
                 currentPower: state.me.currentPower, hp: state.me.hp, speedActive: state.speedActive,
                 berserkerActive: state.berserkerActive, phaseActive: state.phaseActive,
-                mirrorActive: state.mirrorActive, isOwner: isAdmin
+                mirrorActive: state.mirrorActive, isOwner: isAdmin, sprinting: state.sprinting && state.stamina > 0 && !state.staminaDepleted
             });
         }
 
@@ -1995,7 +1995,7 @@
                 state.players = {};
                 Object.keys(data.players || {}).forEach(id => {
                     if (id !== myId) {
-                        state.players[id] = { ...data.players[id], targetX: data.players[id].x, targetY: data.players[id].y, kills: 0 };
+                        state.players[id] = { ...data.players[id], targetX: data.players[id].x, targetY: data.players[id].y, kills: data.players[id].kills || 0 };
                     }
                 });
                 state.projectiles = data.projectiles || {};
@@ -2030,7 +2030,7 @@
                 }
             });
 
-            socket.on('playerJoined', p => { if (p.id !== myId) { state.players[p.id] = { ...p, targetX: p.x, targetY: p.y, kills: 0 }; } });
+            socket.on('playerJoined', p => { if (p.id !== myId) { state.players[p.id] = { ...p, targetX: p.x, targetY: p.y, kills: p.kills || 0 }; } });
             socket.on('playerLeft', id => { delete state.players[id]; delete state.remoteClones[id]; if (state.remoteBabies) delete state.remoteBabies[id]; });
 
             socket.on('playerMoved', (data) => {
@@ -2039,16 +2039,14 @@
                     p.targetX = data.x; p.targetY = data.y; p.angle = data.angle;
                     if (data.currentPower !== undefined) p.currentPower = data.currentPower;
                     if (data.kills !== undefined) p.kills = data.kills;
-                    // Only accept HP from playerMoved if it's HIGHER than what we have locally
-                    // (victim healing/respawning) — never let it reset damage we applied
-                    if (data.hp !== undefined) {
-                        if (p.hp === undefined || data.hp > p.hp) p.hp = data.hp;
-                    }
+                    // Always accept HP from playerMoved — victim broadcasts their real HP after taking damage
+                    if (data.hp !== undefined) p.hp = data.hp;
                     if (data.speedActive !== undefined) p.speedActive = data.speedActive;
                     if (data.berserkerActive !== undefined) p.berserkerActive = data.berserkerActive;
                     if (data.phaseActive !== undefined) p.phaseActive = data.phaseActive;
                     if (data.mirrorActive !== undefined) p.mirrorActive = data.mirrorActive;
                     if (data.isOwner !== undefined) p.isOwner = data.isOwner;
+                    if (data.sprinting !== undefined) p.sprinting = data.sprinting;
                 }
             });
 
@@ -2205,6 +2203,14 @@
             // EMOTE SOCKET EVENTS
             socket.on('playerEmote', (data) => {
                 state.activeEmoteBubbles[data.playerId] = { emote: data.emote, timer: 3.0 };
+            });
+
+            socket.on('killsUpdate', data => {
+                if (!data || !data.playerId) return;
+                if (data.playerId === myId) return; // we track our own kills locally
+                if (state.players[data.playerId]) {
+                    state.players[data.playerId].kills = data.kills;
+                }
             });
 
             socket.on('playerDied', data => {
@@ -3098,6 +3104,19 @@
                 const p = state.players[id];
                 if (p.targetX !== undefined && !state.timestopActive) {
                     p.x += (p.targetX - p.x) * 0.2; p.y += (p.targetY - p.y) * 0.2;
+                }
+                // Spawn sprint particles for remote sprinting players
+                if (p.sprinting && Math.random() < 0.5) {
+                    const backAngle = p.angle + Math.PI + (Math.random() - 0.5) * 0.8;
+                    const bd = 18 + Math.random() * 14;
+                    state.particles.push({
+                        x: p.x + Math.cos(backAngle) * bd,
+                        y: p.y + Math.sin(backAngle) * bd,
+                        vx: Math.cos(backAngle) * (2 + Math.random() * 3),
+                        vy: Math.sin(backAngle) * (2 + Math.random() * 3),
+                        life: 0.7, size: Math.random() * 5 + 2,
+                        color: `rgba(${170 + Math.floor(Math.random()*50)},${170 + Math.floor(Math.random()*50)},${170 + Math.floor(Math.random()*50)},0.7)`
+                    });
                 }
             }
             if (state.me.recoil > 0) state.me.recoil -= dt * 30;
