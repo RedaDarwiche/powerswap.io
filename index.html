@@ -179,7 +179,7 @@
         }
 
         #kill-counter {
-            position: absolute; bottom: 130px; left: 50%; transform: translateX(-50%);
+            position: absolute; bottom: 158px; left: 50%; transform: translateX(-50%);
             display: none; z-index: 50;
             background: rgba(0,0,0,0.7);
             padding: 8px 20px;
@@ -632,6 +632,75 @@
             background: radial-gradient(circle, transparent 40%, rgba(192,192,192,0.15) 100%);
         }
         @keyframes effectPulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 0.8; } }
+
+        /* Inventory slots */
+        #inventory-slots { display: flex; gap: 10px; align-items: center; }
+        .inv-slot {
+            width: 80px; height: 80px;
+            background: rgba(0,0,0,0.6);
+            border: 2px solid rgba(255,255,255,0.1);
+            border-radius: 20px;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            position: relative; transition: all 0.3s; cursor: pointer;
+        }
+        .inv-slot.active-slot {
+            border-color: var(--primary);
+            box-shadow: 0 0 30px rgba(0, 242, 254, 0.4);
+            background: rgba(0, 242, 254, 0.1);
+        }
+        .inv-slot.locked-slot {
+            opacity: 0.35;
+            border-style: dashed;
+            border-color: rgba(255,255,255,0.2);
+            pointer-events: none;
+        }
+        .inv-slot.speed-active { animation: speedPulse 0.5s infinite; }
+        .inv-slot.omega-active { animation: omegaPulse 0.5s infinite; border-color: #ffd700; }
+        .slot-num {
+            position: absolute; top: 4px; left: 8px;
+            font-size: 0.65rem; font-weight: 900;
+            color: rgba(255,255,255,0.5);
+        }
+        .slot-lock-icon {
+            font-size: 1.2rem; color: rgba(255,255,255,0.3);
+        }
+        .inv-slot .power-type-badge {
+            position: absolute; top: -7px; right: -6px;
+            background: rgba(0,0,0,0.85); padding: 1px 5px; border-radius: 8px;
+            font-size: 0.5rem; text-transform: uppercase; font-weight: bold;
+            letter-spacing: 0.2px; white-space: nowrap;
+        }
+        .inv-slot .power-type-badge.omega { background: linear-gradient(135deg, #ffd700, #ff6b00); }
+        .inv-slot-hint {
+            font-size: 0.62rem; color: rgba(255,255,255,0.55); font-weight: bold;
+            margin-top: 3px; text-align: center; max-width: 74px;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+
+        /* Cooldown overlay on slot */
+        .slot-cooldown-overlay {
+            position: absolute; inset: 0; border-radius: 18px;
+            background: rgba(0,0,0,0.65);
+            display: none; justify-content: center; align-items: center;
+            flex-direction: column; pointer-events: none;
+        }
+        .slot-cooldown-overlay.active { display: flex; }
+        .slot-cooldown-text {
+            font-size: 1.3rem; font-weight: 900; color: white;
+            text-shadow: 0 0 8px rgba(0,242,254,0.8);
+        }
+
+        /* Stamina depleted notification */
+        #stamina-notif {
+            position: fixed; bottom: 198px; left: 50%; transform: translateX(-50%);
+            background: rgba(0,0,0,0.75); border: 1px solid rgba(180,180,180,0.4);
+            color: rgba(200,200,200,0.9); padding: 5px 16px;
+            border-radius: 20px; font-size: 0.8rem; font-weight: 700;
+            pointer-events: none; z-index: 200;
+            opacity: 0; transition: opacity 0.3s;
+            letter-spacing: 0.5px;
+        }
+        #stamina-notif.visible { opacity: 1; }
     </style>
 </head>
 <body>
@@ -711,14 +780,38 @@
         </div>
 
         <div id="hud-bottom">
-            <div class="power-slot glass-panel" id="power-slot">
-                <canvas id="power-icon-canvas" width="50" height="50"></canvas>
-                <span class="power-type-badge" id="power-type-badge" style="display:none;"></span>
-                <div class="key-hint">
-                    <span id="power-hint-text">No Power</span>
-                    <span style="font-size: 0.7rem; opacity: 0.6;">D to Drop</span>
+            <div id="inventory-slots">
+                <div class="inv-slot glass-panel active-slot" id="inv-slot-0" onclick="selectSlot(0)">
+                    <span class="slot-num">1</span>
+                    <canvas id="inv-canvas-0" width="44" height="44"></canvas>
+                    <span class="power-type-badge" id="inv-badge-0" style="display:none;"></span>
+                    <div class="slot-cooldown-overlay" id="inv-cd-0">
+                        <span class="slot-cooldown-text" id="inv-cd-text-0"></span>
+                    </div>
+                    <div class="inv-slot-hint" id="inv-hint-0">No Power</div>
+                </div>
+                <div class="inv-slot glass-panel locked-slot" id="inv-slot-1" onclick="selectSlot(1)">
+                    <span class="slot-num">2</span>
+                    <div class="slot-lock-icon" id="inv-lock-1">🔒</div>
+                    <canvas id="inv-canvas-1" width="44" height="44" style="display:none;"></canvas>
+                    <span class="power-type-badge" id="inv-badge-1" style="display:none;"></span>
+                    <div class="slot-cooldown-overlay" id="inv-cd-1">
+                        <span class="slot-cooldown-text" id="inv-cd-text-1"></span>
+                    </div>
+                    <div class="inv-slot-hint" id="inv-hint-1"></div>
+                </div>
+                <div class="inv-slot glass-panel locked-slot" id="inv-slot-2" onclick="selectSlot(2)">
+                    <span class="slot-num">3</span>
+                    <div class="slot-lock-icon" id="inv-lock-2">🔒</div>
+                    <canvas id="inv-canvas-2" width="44" height="44" style="display:none;"></canvas>
+                    <span class="power-type-badge" id="inv-badge-2" style="display:none;"></span>
+                    <div class="slot-cooldown-overlay" id="inv-cd-2">
+                        <span class="slot-cooldown-text" id="inv-cd-text-2"></span>
+                    </div>
+                    <div class="inv-slot-hint" id="inv-hint-2"></div>
                 </div>
             </div>
+            <div style="font-size:0.72rem; opacity:0.7; margin-top:4px; text-align:center;">1/2/3 Switch · SPACE Use · D Drop</div>
         </div>
 
         <div id="kill-counter">
@@ -811,6 +904,8 @@
         </div>
     </div>
             <div id="toast-container"></div>
+
+    <div id="stamina-notif">Stamina Depleted</div>
 
     <script>
         const CONFIG = {
@@ -912,7 +1007,18 @@
             nextOmegaThreshold: 10,
             baby: null, babyShootCooldown: 0, remoteBabies: {}, babyBroadcastTimer: 0,
             laserBeams: [], rocketTrails: [], timebombs: [],
-            bosses: {} // multi-boss NPC state
+            bosses: {},
+            // Inventory system
+            inventory: [null, null, null],
+            activeSlot: 0,
+            inventorySlots: 1,     // 1 until 5 kills, then 3; resets on death
+            killsThisLife: 0,       // kills since last respawn
+            slotCooldowns: [0, 0, 0], // cooldown remaining per slot
+            // Sprint system
+            sprinting: false,
+            stamina: 100,
+            staminaDepleted: false,
+            staminaDepletedTimer: 0
         };
 
         const canvas = document.getElementById('gameCanvas');
@@ -1390,10 +1496,11 @@
 
         function adminGivePower(powerKey) {
             if (!isAdmin || !state.me) return;
+            state.inventory[state.activeSlot] = powerKey;
             state.me.currentPower = powerKey;
             state.me.isOmegaPower = !!(OMEGA_POWER[powerKey]);
             state.me.isAdminPower = !!(ADMIN_POWERS[powerKey]);
-            updatePowerUI(powerKey);
+            updateInventoryUI();
             broadcastState();
             showToast(`Got ${ALL_POWERS[powerKey].name}!`, 'admin');
         }
@@ -1418,8 +1525,13 @@
                     break;
                 case 'add_kills':
                     state.kills += 10;
+                    state.killsThisLife += 10;
                     state.me.kills = state.kills;
                     updateKillCounter();
+                    if (state.killsThisLife >= 5 && state.inventorySlots < 3) {
+                        state.inventorySlots = 3;
+                        updateInventoryUI();
+                    }
                     if (state.kills >= state.nextOmegaThreshold && !state.omegaUnlocked) unlockOmega();
                     showToast('+10 kills!', 'admin');
                     break;
@@ -1610,6 +1722,9 @@
             state.timestopActive = false; state.hitCooldowns = {}; state.isDead = false;
             state.nextOmegaThreshold = 10; state.baby = null; state.babyShootCooldown = 0; state.remoteBabies = {};
             state.bosses = {};
+            state.inventory = [null, null, null]; state.activeSlot = 0;
+            state.inventorySlots = 1; state.killsThisLife = 0; state.slotCooldowns = [0, 0, 0];
+            state.sprinting = false; state.stamina = 100; state.staminaDepleted = false; state.staminaDepletedTimer = 0;
             updateKillCounter();
         }
 
@@ -1623,6 +1738,9 @@
                 state.omegaTimer = 0; state.adminGodMode = false; state.adminInfinite = false;
                 state.mirrorActive = false; state.timestopActive = false; state.hitCooldowns = {}; state.isDead = false;
                 state.nextOmegaThreshold = 10; state.baby = null; state.babyShootCooldown = 0; state.remoteBabies = {};
+                state.inventory = [null, null, null]; state.activeSlot = 0;
+                state.inventorySlots = 1; state.killsThisLife = 0; state.slotCooldowns = [0, 0, 0];
+                state.sprinting = false; state.stamina = 100; state.staminaDepleted = false; state.staminaDepletedTimer = 0;
                 
                 state.me = data.player;
                 state.me.recoil = 0; state.me.poisoned = 0; state.me.frozen = 0;
@@ -1784,9 +1902,16 @@
                 }
                 if (data.killerId === myId && data.victimId !== myId) {
                     state.kills++;
+                    state.killsThisLife++;
                     state.me.kills = state.kills;
                     updateKillCounter();
                     showToast(`Kill! (${state.kills}/${state.nextOmegaThreshold})`, 'kill');
+                    // Unlock 3 inventory slots at 5 kills this life
+                    if (state.killsThisLife === 5 && state.inventorySlots < 3) {
+                        state.inventorySlots = 3;
+                        updateInventoryUI();
+                        showToast('🎒 3 Inventory Slots Unlocked!', 'success');
+                    }
                     if (state.kills >= state.nextOmegaThreshold && !state.omegaUnlocked) unlockOmega();
                 }
             });
@@ -1810,8 +1935,9 @@
                         if (state.me.currentPower === 'phoenix') {
                             // Phoenix revive!
                             state.me.hp = 80;
+                            state.inventory[state.activeSlot] = null;
                             state.me.currentPower = null;
-                            updatePowerUI(null);
+                            updateInventoryUI();
                             spawnParticles(state.me.x, state.me.y, 60, '#ff6600');
                             state.explosions.push({ x: state.me.x, y: state.me.y, radius: 20, maxRadius: 200, life: 1, color: '#ff6600' });
                             showToast('🔥 PHOENIX REVIVED! +80 HP', 'mythic');
@@ -2160,11 +2286,18 @@
             state.omegaUnlocked = false; state.omegaPower = null;
             state.speedActive = false; state.phaseActive = false; state.berserkerActive = false;
             state.mirrorActive = false; state.timestopActive = false; state.clones = []; state.cloneTimer = 0;
+            // Reset inventory on death
+            state.inventory = [null, null, null];
+            state.activeSlot = 0;
+            state.inventorySlots = 1;   // need 5 kills again to get 3 slots
+            state.killsThisLife = 0;
+            state.slotCooldowns = [0, 0, 0];
+            state.sprinting = false;
             // Always clear current power on death — no power survives respawn
             state.me.currentPower = null; state.me.isOmegaPower = false; state.me.isAdminPower = false;
             // Clear all hit cooldowns so boss/players can re-hit after respawn
             state.hitCooldowns = {};
-            updateKillCounter(); updatePowerUI(null); updateScreenEffects();
+            updateKillCounter(); updateInventoryUI(); updateScreenEffects();
         }
 
         function respawn() {
@@ -2177,7 +2310,8 @@
             state.speedActive = false; state.phaseActive = false; state.berserkerActive = false;
             state.mirrorActive = false; state.timestopActive = false;
             state.hitCooldowns = {};
-            updatePowerUI(null); updateScreenEffects();
+            state.stamina = 100; state.staminaDepleted = false;
+            updateInventoryUI(); updateScreenEffects();
             spawnParticles(state.me.x, state.me.y, 20, '#00f2fe');
             broadcastState();
         }
@@ -2230,7 +2364,7 @@
 
         function update(dt) {
             if (!state.me) return;
-            if (state.shootCooldown > 0) state.shootCooldown -= dt;
+            // shootCooldown is now decremented in the movement section below
             if (state.me.poisoned > 0) {
                 state.me.poisoned -= dt;
                 if (Math.random() < 0.1 && !state.adminGodMode) {
@@ -2355,11 +2489,70 @@
                 if (state.me.currentPower === 'speed' && state.speedActive) speed = 5.5;
                 if (state.me.currentPower === 'berserker' && state.berserkerActive) speed = 6;
                 if (state.me.currentPower === 'tank') speed = 1.5;
+                // Sprint boost (Shift held, has stamina)
+                const canSprint = state.sprinting && state.stamina > 0 && !state.staminaDepleted;
+                if (canSprint) {
+                    speed *= 1.65;
+                    state.stamina = Math.max(0, state.stamina - dt * 35);
+                    // Gray sprint particles behind player
+                    if (Math.random() < 0.6) {
+                        const backAngle = state.me.angle + Math.PI + (Math.random() - 0.5) * 0.8;
+                        const bd = 18 + Math.random() * 14;
+                        state.particles.push({
+                            x: state.me.x + Math.cos(backAngle) * bd,
+                            y: state.me.y + Math.sin(backAngle) * bd,
+                            vx: Math.cos(backAngle) * (2 + Math.random() * 3),
+                            vy: Math.sin(backAngle) * (2 + Math.random() * 3),
+                            life: 0.7, size: Math.random() * 5 + 2,
+                            color: `rgba(${170 + Math.floor(Math.random()*50)},${170 + Math.floor(Math.random()*50)},${170 + Math.floor(Math.random()*50)},0.7)`
+                        });
+                    }
+                    // Stamina depleted
+                    if (state.stamina <= 0) {
+                        state.staminaDepleted = true;
+                        state.sprinting = false;
+                        state.staminaDepletedTimer = 2.5; // show notification for 2.5s
+                        const notif = document.getElementById('stamina-notif');
+                        notif.classList.add('visible');
+                    }
+                } else {
+                    // Regen stamina when not sprinting
+                    if (!state.sprinting || state.staminaDepleted) {
+                        state.stamina = Math.min(100, state.stamina + dt * 18);
+                    }
+                    // Clear depleted flag once stamina is partially restored
+                    if (state.staminaDepleted && state.stamina >= 30) {
+                        state.staminaDepleted = false;
+                    }
+                }
+                // Hide stamina notification after timer
+                if (state.staminaDepletedTimer > 0) {
+                    state.staminaDepletedTimer -= dt;
+                    if (state.staminaDepletedTimer <= 0) {
+                        document.getElementById('stamina-notif').classList.remove('visible');
+                    }
+                }
                 state.me.x += (dx / dist) * speed;
                 state.me.y += (dy / dist) * speed;
                 state.me.x = Math.max(25, Math.min(CONFIG.map.width - 25, state.me.x));
                 state.me.y = Math.max(25, Math.min(CONFIG.map.height - 25, state.me.y));
+            } else {
+                // Stationary regen
+                state.stamina = Math.min(100, state.stamina + dt * 18);
+                if (state.staminaDepleted && state.stamina >= 30) state.staminaDepleted = false;
+                if (state.staminaDepletedTimer > 0) {
+                    state.staminaDepletedTimer -= dt;
+                    if (state.staminaDepletedTimer <= 0) {
+                        document.getElementById('stamina-notif').classList.remove('visible');
+                    }
+                }
             }
+            // Update slot cooldowns
+            for (let s = 0; s < 3; s++) {
+                if (state.slotCooldowns[s] > 0) state.slotCooldowns[s] = Math.max(0, state.slotCooldowns[s] - dt);
+            }
+            // Legacy shoot cooldown tick (for backward compat)
+            if (state.shootCooldown > 0) state.shootCooldown = Math.max(0, state.shootCooldown - dt);
 
             state.clones.forEach((clone, idx) => {
                 const followDist = 80 + idx * 50;
@@ -2403,12 +2596,30 @@
                 }
                 if (distP < 40) {
                     socket.emit('powerupTaken', { id });
-                    state.me.currentPower = p.type;
-                    state.me.isOmegaPower = !!(OMEGA_POWER[p.type] || ADMIN_POWERS[p.type]);
-                    state.me.isMythicPower = !!(POWERS[p.type] && POWERS[p.type].rarity === 'mythic');
+                    const powerType = p.type;
+                    const isOmegaOrAdmin = !!(OMEGA_POWER[powerType] || ADMIN_POWERS[powerType]);
+                    // Find best slot: active slot if empty, else first empty slot within unlocked range
+                    let targetSlot = -1;
+                    if (state.inventory[state.activeSlot] === null) {
+                        targetSlot = state.activeSlot;
+                    } else {
+                        for (let s = 0; s < state.inventorySlots; s++) {
+                            if (state.inventory[s] === null) { targetSlot = s; break; }
+                        }
+                    }
+                    if (targetSlot === -1) {
+                        // All unlocked slots full — replace active slot
+                        targetSlot = state.activeSlot;
+                    }
+                    state.inventory[targetSlot] = powerType;
+                    state.me.currentPower = state.inventory[state.activeSlot];
+                    state.me.isOmegaPower = isOmegaOrAdmin;
+                    state.me.isMythicPower = !!(POWERS[powerType] && POWERS[powerType].rarity === 'mythic');
                     state.speedActive = false; state.phaseActive = false; state.berserkerActive = false;
-                    updatePowerUI(p.type); broadcastState();
-                    spawnParticles(p.x, p.y, 15, ALL_POWERS[p.type].color);
+                    updateInventoryUI(); broadcastState();
+                    spawnParticles(p.x, p.y, 15, ALL_POWERS[powerType].color);
+                    const pInfo = ALL_POWERS[powerType];
+                    showToast(`Got ${pInfo.name}!`, pInfo.rarity === 'omega' ? 'omega' : 'mythic');
                     delete state.powerups[id];
                 }
             }
@@ -2517,6 +2728,7 @@
             }
             if (state.me.recoil > 0) state.me.recoil -= dt * 30;
             if (Math.random() < 0.1) updateLeaderboard();
+            updateInventoryUI(); // update cooldown display every frame
             
             // Baby update
             if (state.baby) {
@@ -3001,36 +3213,90 @@
             setTimeout(() => dmgEl.remove(), 1000);
         }
 
-        function updatePowerUI(type) {
-            const slot = document.getElementById('power-slot');
-            const badge = document.getElementById('power-type-badge');
-            const cx = document.getElementById('power-icon-canvas').getContext('2d');
-            cx.clearRect(0, 0, 60, 60);
-            if (!type || !ALL_POWERS[type]) {
-                slot.classList.remove('active', 'speed-active', 'omega-active');
-                badge.style.display = 'none';
-                document.getElementById('power-hint-text').textContent = 'No Power';
-                return;
+        function updateInventoryUI() {
+            for (let s = 0; s < 3; s++) {
+                const slotEl = document.getElementById(`inv-slot-${s}`);
+                const canvasEl = document.getElementById(`inv-canvas-${s}`);
+                const badgeEl = document.getElementById(`inv-badge-${s}`);
+                const hintEl = document.getElementById(`inv-hint-${s}`);
+                const lockEl = document.getElementById(`inv-lock-${s}`);
+                const isUnlocked = s < state.inventorySlots;
+                const power = state.inventory[s];
+                const isActive = s === state.activeSlot;
+                // Lock/unlock appearance
+                slotEl.classList.toggle('locked-slot', !isUnlocked);
+                slotEl.classList.toggle('active-slot', isActive && isUnlocked);
+                if (!isUnlocked) {
+                    if (lockEl) lockEl.style.display = 'block';
+                    if (canvasEl) canvasEl.style.display = 'none';
+                    badgeEl.style.display = 'none';
+                    hintEl.textContent = '';
+                    slotEl.style.borderColor = '';
+                    continue;
+                }
+                if (lockEl) lockEl.style.display = 'none';
+                if (canvasEl) canvasEl.style.display = 'block';
+                if (!power || !ALL_POWERS[power]) {
+                    const cx = canvasEl.getContext('2d');
+                    cx.clearRect(0, 0, 44, 44);
+                    badgeEl.style.display = 'none';
+                    hintEl.textContent = 'Empty';
+                    slotEl.style.borderColor = isActive ? 'var(--primary)' : '';
+                    slotEl.classList.remove('speed-active', 'omega-active');
+                    continue;
+                }
+                const info = ALL_POWERS[power];
+                const cx = canvasEl.getContext('2d');
+                cx.clearRect(0, 0, 44, 44);
+                cx.fillStyle = info.color; cx.shadowBlur = 8; cx.shadowColor = info.color;
+                cx.beginPath(); cx.arc(22, 22, 17, 0, Math.PI * 2); cx.fill(); cx.shadowBlur = 0;
+                cx.fillStyle = 'white'; cx.font = 'bold 12px Arial';
+                cx.textAlign = 'center'; cx.textBaseline = 'middle';
+                cx.fillText(info.name.charAt(0), 22, 22);
+                badgeEl.style.display = 'block';
+                badgeEl.textContent = info.type === 'admin' ? 'admin' : info.rarity;
+                badgeEl.style.color = RARITY_COLORS[info.rarity];
+                badgeEl.classList.toggle('omega', info.rarity === 'omega' || info.rarity === 'admin' || info.rarity === 'mythic');
+                hintEl.textContent = `${info.name}`;
+                slotEl.style.borderColor = isActive ? info.color : rgba_dim(info.color, 0.4);
+                slotEl.classList.toggle('omega-active', isActive && (info.rarity === 'omega' || info.rarity === 'admin' || info.rarity === 'mythic'));
+                slotEl.classList.toggle('speed-active', isActive && (state.speedActive || state.phaseActive || state.berserkerActive));
             }
-            const info = ALL_POWERS[type];
-            slot.classList.add('active');
-            slot.style.borderColor = info.color;
-            slot.classList.toggle('omega-active', info.rarity === 'omega' || info.rarity === 'admin' || info.rarity === 'mythic');
-            badge.style.display = 'block';
-            badge.textContent = info.type === 'admin' ? 'admin' : info.rarity;
-            badge.style.color = RARITY_COLORS[info.rarity];
-            badge.classList.toggle('omega', info.rarity === 'omega' || info.rarity === 'admin' || info.rarity === 'mythic');
-            document.getElementById('power-hint-text').textContent = `${info.name} (SPACE)`;
-            cx.fillStyle = info.color; cx.shadowBlur = 10; cx.shadowColor = info.color;
-            cx.beginPath(); cx.arc(25, 25, 20, 0, Math.PI * 2); cx.fill(); cx.shadowBlur = 0;
-            cx.fillStyle = 'white'; cx.font = 'bold 14px Arial';
-            cx.textAlign = 'center'; cx.textBaseline = 'middle';
-            cx.fillText(info.name.charAt(0), 25, 25);
-            showToast(`Got ${info.name}!`, info.rarity === 'omega' ? 'omega' : 'mythic');
+            // Update cooldown overlays
+            for (let s = 0; s < 3; s++) {
+                const cdEl = document.getElementById(`inv-cd-${s}`);
+                const cdText = document.getElementById(`inv-cd-text-${s}`);
+                const cd = state.slotCooldowns ? state.slotCooldowns[s] : 0;
+                if (cd > 0.05) {
+                    cdEl.classList.add('active');
+                    cdText.textContent = cd.toFixed(1) + 's';
+                } else {
+                    cdEl.classList.remove('active');
+                }
+            }
+        }
+
+        function rgba_dim(hex, alpha) {
+            // Convert hex color to rgba for dimming
+            try {
+                const r = parseInt(hex.slice(1,3),16);
+                const g = parseInt(hex.slice(3,5),16);
+                const b = parseInt(hex.slice(5,7),16);
+                return `rgba(${r},${g},${b},${alpha})`;
+            } catch(e) { return hex; }
+        }
+
+        // Legacy compat — called from various places
+        function updatePowerUI(type) {
+            if (state.me && type !== undefined) {
+                state.inventory[state.activeSlot] = type;
+                state.me.currentPower = type;
+            }
+            updateInventoryUI();
         }
 
         function updateSpeedUI() {
-            document.getElementById('power-slot').classList.toggle('speed-active', state.speedActive || state.phaseActive || state.berserkerActive);
+            updateInventoryUI();
         }
 
         function updateCloneUI() {
@@ -3081,12 +3347,33 @@
                 if (e.code === 'Enter' && e.target.id === 'chat-input') sendChat();
                 return;
             }
+            if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') {
+                state.sprinting = true; return;
+            }
             if (state.isDead) return;
             if (e.code === 'Space') { e.preventDefault(); tryPower(); }
             if (e.code === 'KeyD') { e.preventDefault(); tryDrop(); }
             if (e.code === 'KeyQ') { e.preventDefault(); tryOmegaPower(); }
             if (e.code === 'Enter') document.getElementById('chat-input').focus();
+            if (e.code === 'Digit1') selectSlot(0);
+            if (e.code === 'Digit2') selectSlot(1);
+            if (e.code === 'Digit3') selectSlot(2);
         });
+
+        window.addEventListener('keyup', e => {
+            if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') {
+                state.sprinting = false;
+            }
+        });
+
+        function selectSlot(idx) {
+            if (!state.me || idx >= state.inventorySlots) return;
+            state.activeSlot = idx;
+            state.me.currentPower = state.inventory[idx] || null;
+            state.speedActive = false; state.phaseActive = false; state.berserkerActive = false;
+            updateInventoryUI();
+            broadcastState();
+        }
 
         function tryDamageBoss(cx, cy, radius, damage) {
             for (const bossId in state.bosses) {
@@ -3147,17 +3434,22 @@
                 return;
             }
             if (powerInfo.type === 'shoot') {
+                // Updated cooldowns
                 let cooldown = 0.15;
-                if (powerType === 'minigun') cooldown = 0.03;
-                if (powerType === 'sniper') cooldown = 0.8;
-                if (powerType === 'voidbeam') cooldown = 0.3;
+                if (powerType === 'minigun') cooldown = 0.2;
+                if (powerType === 'sniper') cooldown = 6.0;
+                if (powerType === 'voidbeam') cooldown = 1.5;
+                if (powerType === 'tripleshot') cooldown = 1.5;
+                if (powerType === 'scatter') cooldown = 1.5;
+                if (powerType === 'explosive') cooldown = 1.5;
+                if (powerType === 'freeze') cooldown = 1.5;
                 if (state.adminInfinite) cooldown = 0.02;
-                if (state.shootCooldown <= 0) {
+                if (state.slotCooldowns[state.activeSlot] <= 0) {
                     const shootX = state.me.x + Math.cos(state.me.angle) * 25;
                     const shootY = state.me.y + Math.sin(state.me.angle) * 25;
                     let damage = 20;
                     if (powerType === 'sniper') damage = 60;
-                    if (powerType === 'explosive') damage = 17; // half damage (ball), splash also does 17
+                    if (powerType === 'explosive') damage = 17;
                     if (powerType === 'voidbeam') damage = 50;
                     if (powerType === 'tripleshot') {
                         for (let i = -1; i <= 1; i++) shootProjectile(shootX, shootY, state.me.angle + i * 0.2, powerType, damage);
@@ -3169,7 +3461,8 @@
                         }
                     } else { shootProjectile(shootX, shootY, state.me.angle, powerType, damage); }
                     state.me.recoil = powerType === 'sniper' ? 15 : 8;
-                    state.shootCooldown = cooldown;
+                    state.slotCooldowns[state.activeSlot] = cooldown;
+                    state.shootCooldown = cooldown; // legacy compat
                 }
                 return;
             }
@@ -3943,17 +4236,18 @@
         }
 
         function tryDrop() {
-            if (!state.me || !state.me.currentPower) {
+            const droppedPower = state.inventory[state.activeSlot];
+            if (!state.me || !droppedPower) {
                 showToast('Nothing to drop!', 'warning'); return;
             }
-            const droppedPower = state.me.currentPower;
             const powerInfo = ALL_POWERS[droppedPower];
             // Only Omega powers can't be dropped - they vanish
             if (state.me.isOmegaPower && OMEGA_POWER[droppedPower]) {
                 spawnParticles(state.me.x, state.me.y, 20, powerInfo.color);
                 showToast(`${powerInfo.name} destroyed!`, 'mythic');
+                state.inventory[state.activeSlot] = null;
                 state.me.currentPower = null; state.me.isOmegaPower = false;
-                updatePowerUI(null); broadcastState(); return;
+                updateInventoryUI(); broadcastState(); return;
             }
             const dropId = 'drop_' + (powerupIdCounter++);
             const dropX = state.me.x + Math.cos(state.me.angle + Math.PI) * 50;
@@ -3965,9 +4259,12 @@
             };
             socket.emit('dropPower', { type: droppedPower, x: state.powerups[dropId].x, y: state.powerups[dropId].y });
             spawnParticles(state.me.x, state.me.y, 10, powerInfo.color);
-            state.me.currentPower = null; state.speedActive = false;
+            state.inventory[state.activeSlot] = null;
+            state.slotCooldowns[state.activeSlot] = 0;
+            state.speedActive = false;
             state.phaseActive = false; state.berserkerActive = false;
-            updatePowerUI(null); broadcastState();
+            state.me.currentPower = state.inventory[state.activeSlot];
+            updateInventoryUI(); broadcastState();
             showToast(`Dropped ${powerInfo.name}!`, 'mythic');
         }
 
