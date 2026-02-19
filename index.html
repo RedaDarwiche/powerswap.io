@@ -1750,7 +1750,7 @@
                     break;
                 case 'heal_all':
                     for (let id in state.players) {
-                        socket.emit('playerHit', { targetId: id, damage: -100, attackerId: myId });
+                        hitPlayer(id, -100);
                         spawnParticles(state.players[id].x, state.players[id].y, 15, '#22c55e');
                     }
                     showToast('Healed everyone!', 'admin');
@@ -2626,7 +2626,7 @@
                         const intensity = 1 - (dist / thornRange);
                         if (Math.random() < dt * 4 * intensity) {
                             const dmg = Math.max(1, Math.floor(intensity * 8));
-                            socket.emit('playerHit', { targetId: id, damage: dmg, attackerId: myId });
+                            hitPlayer(id, dmg);
                             spawnParticles(
                                 state.me.x + (Math.random()-0.5)*thornRange,
                                 state.me.y + (Math.random()-0.5)*thornRange,
@@ -2635,7 +2635,7 @@
                         }
                         // Slow effect: push players that are very close back slightly
                         if (dist < 80 && Math.random() < dt * 3) {
-                            socket.emit('playerHit', { targetId: id, damage: 3, attackerId: myId });
+                            hitPlayer(id, 3);
                         }
                     }
                 }
@@ -2655,7 +2655,7 @@
                     const p = state.players[id];
                     const dist = Math.sqrt((state.me.x - p.x)**2 + (state.me.y - p.y)**2);
                     if (dist < 80 && Math.random() < 0.05) {
-                        socket.emit('playerHit', { targetId: id, damage: 3, attackerId: myId });
+                        hitPlayer(id, 3);
                         state.me.hp = Math.min(100, state.me.hp + 3);
                         spawnParticles(state.me.x, state.me.y, 3, '#7f1d1d');
                     }
@@ -2704,7 +2704,7 @@
                         if (Math.sqrt((m.x - p.x)**2 + (m.targetY - p.y)**2) < 100) {
                             // FIXED: Don't send hit if meteor hits self (checking if hit player is the caster)
                             if (id !== myId) {
-                                socket.emit('playerHit', { targetId: id, damage: 40, attackerId: myId });
+                                hitPlayer(id, 40);
                             } else {
                                 // Self-damage from own meteor (no kill credit should be assigned)
                                 socket.emit('playerHit', { targetId: myId, damage: 40, attackerId: null });
@@ -2883,7 +2883,7 @@
                                 state.hitCooldowns[hitKey] = Date.now();
                                 let damage = proj.damage || 20;
                                 if (state.me.currentPower === 'rage') damage *= 2;
-                                socket.emit('playerHit', { targetId: pid, damage, attackerId: myId });
+                                hitPlayer(pid, damage);
                                 spawnParticles(p.x, p.y, 8, '#ef4444');
                                 spawnDamageNumber(p.x, p.y, damage, 'damage');
                                 if (state.me.currentPower === 'vampire') {
@@ -2898,7 +2898,7 @@
                                         if (splashId === pid) continue;
                                         const sp = state.players[splashId];
                                         if (Math.sqrt((proj.x-sp.x)**2+(proj.y-sp.y)**2) < 180) {
-                                            socket.emit('playerHit', { targetId: splashId, damage: splashDmg, attackerId: myId });
+                                            hitPlayer(splashId, splashDmg);
                                         }
                                     }
                                     emitAbilityEffect('shockwave', proj.x, proj.y);
@@ -3093,23 +3093,36 @@
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             ctx.save();
             ctx.translate(-state.camera.x, -state.camera.y);
+
+            // Render distance: only draw objects within visible viewport + margin
+            const RENDER_MARGIN = 300;
+            const viewLeft   = state.camera.x - RENDER_MARGIN;
+            const viewRight  = state.camera.x + canvas.width  + RENDER_MARGIN;
+            const viewTop    = state.camera.y - RENDER_MARGIN;
+            const viewBottom = state.camera.y + canvas.height + RENDER_MARGIN;
+            function inView(x, y, r = 0) {
+                return x + r > viewLeft && x - r < viewRight && y + r > viewTop && y - r < viewBottom;
+            }
+
             drawGrid();
             for (let e of state.explosions) {
+                if (!inView(e.x, e.y, e.radius)) continue;
                 ctx.globalAlpha = e.life * 0.6; ctx.fillStyle = e.color;
                 ctx.beginPath(); ctx.arc(e.x, e.y, e.radius, 0, Math.PI * 2); ctx.fill();
             }
             ctx.globalAlpha = 1;
             for (let m of state.meteors) {
+                if (!inView(m.x, m.y, 30)) continue;
                 ctx.fillStyle = '#ff4500'; ctx.shadowBlur = 20; ctx.shadowColor = '#ff4500';
                 ctx.beginPath(); ctx.arc(m.x, m.y, 15, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
             }
             for (let id in state.powerups) {
                 const p = state.powerups[id];
-                if (p && p.type && ALL_POWERS[p.type]) drawPowerup(p);
+                if (p && p.type && ALL_POWERS[p.type] && inView(p.x, p.y, 40)) drawPowerup(p);
             }
             // Draw active timebombs - same small pulsing indicator on all screens
             for (let bomb of state.timebombs) {
-                if (bomb.timer <= 0) continue;
+                if (bomb.timer <= 0 || !inView(bomb.x, bomb.y, 40)) continue;
                 const pulse = Math.sin(Date.now() / 120) * 0.4 + 0.6;
                 const urgency = 1 - (bomb.timer / 2.0);
                 ctx.save();
@@ -3128,6 +3141,7 @@
             }
             for (let id in state.projectiles) {
                 const p = state.projectiles[id];
+                if (!inView(p.x, p.y, 20)) continue;
                 const projRadius = p.type === 'explosive' ? 12 : (p.type === 'minigun' ? 4 : 6);
                 ctx.fillStyle = p.color || '#00f2fe'; ctx.shadowBlur = 8; ctx.shadowColor = ctx.fillStyle;
                 ctx.beginPath(); ctx.arc(p.x, p.y, projRadius, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
@@ -3137,6 +3151,7 @@
                 const lb = state.laserBeams[i];
                 lb.life -= 0.04;
                 if (lb.life <= 0) { state.laserBeams.splice(i, 1); continue; }
+                if (!inView((lb.x1+lb.x2)/2, (lb.y1+lb.y2)/2, 1400)) continue;
                 ctx.save();
                 ctx.globalAlpha = lb.life;
                 ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 8 * lb.life;
@@ -3154,24 +3169,25 @@
                 const rt = state.rocketTrails[i];
                 rt.life -= 0.05;
                 if (rt.life <= 0) { state.rocketTrails.splice(i, 1); continue; }
+                if (!inView(rt.x, rt.y, 20)) continue;
                 ctx.save();
                 ctx.globalAlpha = rt.life * 0.8;
                 ctx.fillStyle = '#fb923c'; ctx.shadowBlur = 12; ctx.shadowColor = '#fb923c';
                 ctx.beginPath(); ctx.arc(rt.x, rt.y, 8 * rt.life, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
                 ctx.restore();
             }
-            for (let clone of state.clones) drawPlayer(clone, false, true);
+            for (let clone of state.clones) { if (inView(clone.x, clone.y, 60)) drawPlayer(clone, false, true); }
             for (let ownerId in state.remoteClones) {
-                for (let clone of state.remoteClones[ownerId]) drawPlayer(clone, false, true);
+                for (let clone of state.remoteClones[ownerId]) { if (inView(clone.x, clone.y, 60)) drawPlayer(clone, false, true); }
             }
             // Draw NPCs
             for (const npcId in state.npcs) {
                 const npc = state.npcs[npcId];
                 if (!npc || !npc.rarity || (npc.hp !== undefined && npc.hp <= 0)) continue;
-                drawNPC(npc);
+                if (inView(npc.x, npc.y, 80)) drawNPC(npc);
             }
             for (let id in state.players) {
-                if (state.players[id].hp > 0) drawPlayer(state.players[id], false, false);
+                if (state.players[id].hp > 0 && inView(state.players[id].x, state.players[id].y, 60)) drawPlayer(state.players[id], false, false);
             }
             if (state.me && !state.isDead) drawPlayer(state.me, true, false);
             // Draw emote bubbles above players
@@ -3237,6 +3253,7 @@
                     boss.y = (boss.y || boss.targetY) + ((boss.targetY - (boss.y || boss.targetY)) * 0.15);
                 }
                 const bx = boss.x, by = boss.y;
+                if (!inView(bx, by, 120)) continue;
                 const bHpPct = Math.max(0, (boss.hp || 0) / (boss.maxHp || 1000));
                 ctx.save();
                 ctx.translate(bx, by);
@@ -3267,7 +3284,7 @@
                 ctx.translate(bx, by);
                 ctx.fillStyle = '#ff4444'; ctx.font = 'bold 18px Outfit'; ctx.textAlign = 'center';
                 ctx.shadowColor = '#000'; ctx.shadowBlur = 5;
-                ctx.fillText(`[BOSS] ${boss.label || ''}`, 0, -70);
+                ctx.fillText(`💀 Boss ${boss.label || ''}`, 0, -70);
                 ctx.font = 'bold 13px Outfit'; ctx.fillStyle = '#fbbf24';
                 ctx.fillText(`${Math.round(boss.hp || 0)} / ${boss.maxHp || 1000} HP`, 0, -53);
                 ctx.fillStyle = 'rgba(0,0,0,0.5)';
@@ -3886,6 +3903,14 @@
             }
         }
 
+        // Helper: emit playerHit AND update remote player HP locally so health bar reflects damage immediately
+        function hitPlayer(targetId, damage) {
+            socket.emit('playerHit', { targetId, damage, attackerId: myId });
+            if (state.players[targetId]) {
+                state.players[targetId].hp = Math.max(0, (state.players[targetId].hp || 100) - damage);
+            }
+        }
+
         function tryOmegaPower() {
             if (!state.me || !state.omegaUnlocked || !state.omegaPower) {
                 const threshold = state.nextOmegaThreshold || 10;
@@ -4000,7 +4025,7 @@
                             if (dist < 200) {
                                 const currentHp = p.hp || 100;
                                 if (currentHp > 8) {
-                                    socket.emit('playerHit', { targetId: id, damage: 6, attackerId: myId });
+                                    hitPlayer(id, 6);
                                     spawnParticles(p.x, p.y, 3, '#84cc16');
                                 }
                             }
@@ -4049,7 +4074,7 @@
                                     const alreadyHit = laserDmgDealt[id] || 0;
                                     if (alreadyHit < 50) {
                                         const dmg = 8;
-                                        socket.emit('playerHit', { targetId: id, damage: dmg, attackerId: myId });
+                                        hitPlayer(id, dmg);
                                         laserDmgDealt[id] = alreadyHit + dmg;
                                         spawnParticles(p.x, p.y, 5, '#ef4444');
                                     }
@@ -4099,7 +4124,7 @@
                         for (let id in state.players) {
                             const p = state.players[id];
                             const dist = Math.sqrt((state.me.x - p.x)**2 + (state.me.y - p.y)**2);
-                            if (dist < 100) socket.emit('playerHit', { targetId: id, damage: 15, attackerId: myId });
+                            if (dist < 100) hitPlayer(id, 15);
                         }
                         tryDamageBoss(state.me.x, state.me.y, 130, 15);
                         tryDamageNPCs(state.me.x, state.me.y, 130, 15);
@@ -4137,7 +4162,7 @@
                     for (let id in state.players) {
                         const p = state.players[id];
                         if (Math.sqrt((state.me.x - p.x)**2 + (state.me.y - p.y)**2) < 200) {
-                            socket.emit('playerHit', { targetId: id, damage: 25, attackerId: myId });
+                            hitPlayer(id, 25);
                         }
                     }
                     tryDamageBoss(state.me.x, state.me.y, 200, 25);
@@ -4150,7 +4175,7 @@
                     for (let id in state.players) {
                         const p = state.players[id];
                         if (Math.sqrt((state.mouse.worldX - p.x)**2 + (state.mouse.worldY - p.y)**2) < 200) {
-                            socket.emit('playerHit', { targetId: id, damage: 30, attackerId: myId });
+                            hitPlayer(id, 30);
                         }
                     }
                     spawnParticles(state.mouse.worldX, state.mouse.worldY, 40, '#4c1d95');
@@ -4162,7 +4187,7 @@
                     for (let id in state.players) {
                         const p = state.players[id];
                         if (Math.sqrt((state.me.x - p.x)**2 + (state.me.y - p.y)**2) < 400) {
-                            socket.emit('playerHit', { targetId: id, damage: 70, attackerId: myId });
+                            hitPlayer(id, 70);
                         }
                     }
                     tryDamageBoss(state.me.x, state.me.y, 400, 70);
@@ -4222,7 +4247,7 @@
                         for (let id in state.players) {
                             const p = state.players[id];
                             if (Math.sqrt((bombX - p.x)**2 + (bombY - p.y)**2) < 250) {
-                                socket.emit('playerHit', { targetId: id, damage: 50, attackerId: myId });
+                                hitPlayer(id, 50);
                             }
                         }
                         tryDamageBoss(bombX, bombY, 250, 50);
@@ -4253,7 +4278,7 @@
                         for (let id in state.players) {
                             const p = state.players[id];
                             if (Math.sqrt((targetX - p.x)**2 + (targetY - p.y)**2) < 200) {
-                                socket.emit('playerHit', { targetId: id, damage: 70, attackerId: myId });
+                                hitPlayer(id, 70);
                             }
                         }
                         tryDamageBoss(targetX, targetY, 200, 70);
@@ -4271,7 +4296,7 @@
                         for (let id in state.players) {
                             const p = state.players[id];
                             if (Math.sqrt((shadowX - p.x)**2 + (shadowY - p.y)**2) < 180) {
-                                socket.emit('playerHit', { targetId: id, damage: 45, attackerId: myId });
+                                hitPlayer(id, 45);
                             }
                         }
                         tryDamageBoss(shadowX, shadowY, 180, 45);
@@ -4283,7 +4308,7 @@
                         const p = state.players[id];
                         const dist = Math.sqrt((state.me.x - p.x)**2 + (state.me.y - p.y)**2);
                         if (dist < 300) {
-                            socket.emit('playerHit', { targetId: id, damage: 35, attackerId: myId });
+                            hitPlayer(id, 35);
                         }
                     }
                     tryDamageBoss(state.me.x, state.me.y, 300, 35);
@@ -4311,7 +4336,7 @@
                             // Rip them toward you visually
                             spawnParticles(p.x, p.y, 20, '#a855f7');
                             // Damage
-                            socket.emit('playerHit', { targetId: id, damage: 35, attackerId: myId });
+                            hitPlayer(id, 35);
                             // Move them toward caster on their client (use swap mechanics)
                             const pullAngle = Math.atan2(state.me.y - p.y, state.me.x - p.x);
                             const pullX = p.x + Math.cos(pullAngle) * Math.min(dist * 0.7, 250);
@@ -4340,7 +4365,7 @@
                         const p = state.players[id];
                         const dist = Math.sqrt((state.me.x - p.x)**2 + (state.me.y - p.y)**2);
                         if (dist < pullRadius && dist > 0) {
-                            socket.emit('playerHit', { targetId: id, damage: 20, attackerId: myId });
+                            hitPlayer(id, 20);
                         }
                     }
                     // Visual effect
@@ -4388,7 +4413,7 @@
                         const p = state.players[id];
                         const dist = Math.sqrt((chaosX - p.x)**2 + (chaosY - p.y)**2);
                         if (dist < 250) {
-                            socket.emit('playerHit', { targetId: id, damage: 45, attackerId: myId });
+                            hitPlayer(id, 45);
                         }
                     }
                     state.explosions.push({ x: chaosX, y: chaosY, radius: 30, maxRadius: 250, life: 1, color: '#ec4899' });
@@ -4408,7 +4433,7 @@
                             for (let id in state.players) {
                                 const p = state.players[id];
                                 if (Math.sqrt((boltX-p.x)**2+(boltY-p.y)**2) < 90) {
-                                    socket.emit('playerHit', { targetId: id, damage: 35, attackerId: myId });
+                                    hitPlayer(id, 35);
                                     spawnParticles(p.x, p.y, 15, '#facc15');
                                 }
                             }
@@ -4439,7 +4464,7 @@
                         const dist = Math.sqrt((state.me.x - p.x)**2 + (state.me.y - p.y)**2);
                         if (dist < 350) {
                             const drain = 40;
-                            socket.emit('playerHit', { targetId: id, damage: drain, attackerId: myId });
+                            hitPlayer(id, drain);
                             spawnParticles(p.x, p.y, 15, '#8800ff');
                             stolen += drain;
                         }
@@ -4465,7 +4490,7 @@
                             for (let id in state.players) {
                                 const p = state.players[id];
                                 if (Math.sqrt((rx - p.x)**2 + (ry - p.y)**2) < 300) {
-                                    socket.emit('playerHit', { targetId: id, damage: 40, attackerId: myId });
+                                    hitPlayer(id, 40);
                                 }
                             }
                         }, i * 200);
@@ -4486,7 +4511,7 @@
                         const newX = 200 + Math.random() * (CONFIG.map.width - 400);
                         const newY = 200 + Math.random() * (CONFIG.map.height - 400);
                         spawnParticles(state.players[id].x, state.players[id].y, 30, '#9333ea');
-                        socket.emit('playerHit', { targetId: id, damage: 30, attackerId: myId });
+                        hitPlayer(id, 30);
                     }
                     state.explosions.push({ x: state.me.x, y: state.me.y, radius: 100, maxRadius: 800, life: 2, color: '#9333ea' });
                     socket.emit('abilityUsed', { type: 'voidrift', x: state.me.x, y: state.me.y, id: myId });
@@ -4513,7 +4538,7 @@
                         for (let id in state.players) {
                             const p = state.players[id];
                             if (Math.sqrt((beamX - p.x)**2 + (beamY - p.y)**2) < 60) {
-                                socket.emit('playerHit', { targetId: id, damage: 100, attackerId: myId });
+                                hitPlayer(id, 100);
                             }
                         }
                     }
@@ -4530,7 +4555,7 @@
                             for (let id in state.players) {
                                 const p = state.players[id];
                                 if (Math.sqrt((singX - p.x)**2 + (singY - p.y)**2) < 600) {
-                                    socket.emit('playerHit', { targetId: id, damage: 15, attackerId: myId });
+                                    hitPlayer(id, 15);
                                 }
                             }
                             spawnParticles(singX, singY, 30, '#000000');
@@ -4550,7 +4575,7 @@
                                 for (let id in state.players) {
                                     const p = state.players[id];
                                     if (Math.sqrt((bx - p.x)**2 + (by - p.y)**2) < 80) {
-                                        socket.emit('playerHit', { targetId: id, damage: 20, attackerId: myId });
+                                        hitPlayer(id, 20);
                                     }
                                 }
                             }
@@ -4567,7 +4592,7 @@
                             for (let id in state.players) {
                                 const p = state.players[id];
                                 if (Math.sqrt((state.me.x - p.x)**2 + (state.me.y - p.y)**2) < 400) {
-                                    socket.emit('playerHit', { targetId: id, damage: 50, attackerId: myId });
+                                    hitPlayer(id, 50);
                                 }
                             }
                         }, i * 300);
@@ -4579,7 +4604,7 @@
                     const oblPts = Array.from({length:10}, () => ({ x: Math.random()*CONFIG.map.width, y: Math.random()*CONFIG.map.height }));
                     socket.emit('abilityUsed', { type: 'obliterate', x: state.me.x, y: state.me.y, id: myId, pts: oblPts });
                     for (let id in state.players) {
-                        socket.emit('playerHit', { targetId: id, damage: 9999, attackerId: myId });
+                        hitPlayer(id, 9999);
                         spawnParticles(state.players[id].x, state.players[id].y, 50, '#dc2626');
                     }
                     for (let i = 0; i < 10; i++) {
@@ -4600,7 +4625,7 @@
                         const newPos = positions[posIdx++];
                         spawnParticles(state.players[id].x, state.players[id].y, 40, '#8b00ff');
                         spawnParticles(newPos.x, newPos.y, 40, '#8b00ff');
-                        socket.emit('playerHit', { targetId: id, damage: 35, attackerId: myId });
+                        hitPlayer(id, 35);
                     }
                     state.explosions.push({ x: state.me.x, y: state.me.y, radius: 100, maxRadius: 1000, life: 2, color: '#8b00ff' });
                     socket.emit('abilityUsed', { type: 'dimensionrift', x: state.me.x, y: state.me.y, id: myId });
@@ -4618,7 +4643,7 @@
                                 for (let id in state.players) {
                                     const p = state.players[id];
                                     if (Math.sqrt((beamX - p.x)**2 + (beamY - p.y)**2) < 80) {
-                                        socket.emit('playerHit', { targetId: id, damage: 30, attackerId: myId });
+                                        hitPlayer(id, 30);
                                     }
                                 }
                             }
@@ -4638,7 +4663,7 @@
                                 const p = state.players[id];
                                 const dist = Math.sqrt((voidX - p.x)**2 + (voidY - p.y)**2);
                                 if (dist < radius + 100) {
-                                    socket.emit('playerHit', { targetId: id, damage: 20, attackerId: myId });
+                                    hitPlayer(id, 20);
                                 }
                             }
                             spawnParticles(voidX, voidY, 30, '#000033');
@@ -4657,7 +4682,7 @@
                                 for (let id in state.players) {
                                     const p = state.players[id];
                                     if (Math.sqrt((sunX - p.x)**2 + (sunY - p.y)**2) < 150) {
-                                        socket.emit('playerHit', { targetId: id, damage: 15, attackerId: myId });
+                                        hitPlayer(id, 15);
                                     }
                                 }
                                 spawnParticles(sunX, sunY, 10, '#ffdf00');
@@ -4676,7 +4701,7 @@
                     for (let wave = 0; wave < 6; wave++) {
                         setTimeout(() => {
                             for (let id in state.players) {
-                                socket.emit('playerHit', { targetId: id, damage: 40, attackerId: myId });
+                                hitPlayer(id, 40);
                                 spawnParticles(state.players[id].x, state.players[id].y, 30, '#00fff7');
                             }
                             // Use pre-generated explosion positions
@@ -4700,7 +4725,7 @@
                                 state.explosions.push({ x: wx, y: wy, radius: 50, maxRadius: 300, life: 1, color: '#b91c1c' });
                                 for (let id in state.players) {
                                     if (Math.sqrt((wx-state.players[id].x)**2+(wy-state.players[id].y)**2) < 300)
-                                        socket.emit('playerHit', { targetId: id, damage: 35, attackerId: myId });
+                                        hitPlayer(id, 35);
                                 }
                             }
                         }, ring * 250);
@@ -4717,7 +4742,7 @@
                             setTimeout(() => {
                                 spawnParticles(pxSnap, pySnap - tick*30, 5, '#f0abfc');
                                 state.explosions.push({ x: pxSnap, y: pySnap, radius: 10, maxRadius: 60, life: 0.4, color: '#f0abfc' });
-                                socket.emit('playerHit', { targetId: id, damage: 10, attackerId: myId });
+                                hitPlayer(id, 10);
                             }, tick * 100);
                         }
                     }
@@ -4729,7 +4754,7 @@
                     for (let wave = 0; wave < 10; wave++) {
                         setTimeout(() => {
                             for (let id in state.players) {
-                                socket.emit('playerHit', { targetId: id, damage: 25, attackerId: myId });
+                                hitPlayer(id, 25);
                             }
                             spawnParticles(state.me.x, state.me.y, 20, '#1c1c1c');
                         }, wave * 200);
@@ -4746,7 +4771,7 @@
                             spawnParticles(bx, by, 10, '#60a5fa');
                             for (let id in state.players) {
                                 if (Math.sqrt((bx-state.players[id].x)**2+(by-state.players[id].y)**2) < 120)
-                                    socket.emit('playerHit', { targetId: id, damage: 30, attackerId: myId });
+                                    hitPlayer(id, 30);
                             }
                             tryDamageNPCs(bx, by, 120, 30);
                         }, bolt * 150);
@@ -4815,7 +4840,7 @@
             for (let id in state.players) {
                 const p = state.players[id];
                 if (Math.sqrt((state.baby.x-p.x)**2+(state.baby.y-p.y)**2) < 200) {
-                    socket.emit('playerHit', { targetId: id, damage: 40, attackerId: myId });
+                    hitPlayer(id, 40);
                 }
             }
             socket.emit('abilityUsed', { type: 'babydestruct', x: state.baby.x, y: state.baby.y, id: myId });
