@@ -633,6 +633,98 @@
         }
         @keyframes effectPulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 0.8; } }
 
+        /* Update panel on main menu */
+        /* ── Update Panel ── */
+        #update-panel {
+            position: fixed; bottom: 24px; left: 24px;
+            width: 258px; z-index: 101; pointer-events: auto;
+            background: rgba(8,8,18,0.92);
+            border: 1px solid rgba(0,242,254,0.14);
+            border-radius: 14px; padding: 0;
+            backdrop-filter: blur(14px);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05);
+            overflow: hidden;
+        }
+        #update-panel.hidden { display: none; }
+        #update-panel .up-header {
+            display: flex; align-items: center; gap: 10px; padding: 12px 14px 10px;
+            background: rgba(0,242,254,0.05);
+            border-bottom: 1px solid rgba(0,242,254,0.1);
+        }
+        #update-panel .up-icon {
+            width: 30px; height: 30px; border-radius: 8px; flex-shrink: 0;
+            background: linear-gradient(135deg,rgba(0,242,254,0.3),rgba(79,172,254,0.2));
+            display: flex; align-items: center; justify-content: center; font-size: 15px;
+        }
+        #update-panel .up-title { font-size: 0.75rem; font-weight: 800; letter-spacing: 0.8px; color: #00f2fe; text-transform: uppercase; }
+        #update-panel .up-date { font-size: 0.58rem; color: rgba(255,255,255,0.3); margin-top: 1px; }
+        #update-panel .up-body { padding: 10px 14px 12px; display: flex; flex-direction: column; gap: 7px; }
+        .update-entry { display: flex; gap: 9px; align-items: flex-start; }
+        .update-tag {
+            font-size: 0.5rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.3px;
+            padding: 2px 6px; border-radius: 5px; white-space: nowrap; margin-top: 2px; flex-shrink: 0;
+        }
+        .update-tag.new { background: rgba(16,185,129,0.12); color: #34d399; border: 1px solid rgba(16,185,129,0.28); }
+        .update-tag.fix { background: rgba(239,68,68,0.1); color: #f87171; border: 1px solid rgba(239,68,68,0.22); }
+        .update-tag.change { background: rgba(79,172,254,0.1); color: #60b4fe; border: 1px solid rgba(79,172,254,0.22); }
+        .update-desc { font-size: 0.69rem; color: rgba(255,255,255,0.5); line-height: 1.45; }
+        /* ── Emote System ── */
+        #emote-wheel {
+            position: fixed; right: 66px; top: 50%; transform: translateY(-50%);
+            display: none; z-index: 300; pointer-events: auto; flex-direction: column; gap: 8px;
+        }
+        #emote-wheel.visible { display: flex; }
+        .emote-btn-ingame {
+            width: 52px; height: 52px; border-radius: 50%;
+            background: rgba(8,8,18,0.94); border: 2px solid rgba(0,242,254,0.35);
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            transition: all 0.15s; backdrop-filter: blur(8px); box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+            padding: 0;
+        }
+        .emote-btn-ingame:hover { transform: scale(1.2); border-color: #00f2fe; }
+        #emote-toggle-btn {
+            position: fixed; right: 12px; top: 50%; transform: translateY(-50%);
+            width: 40px; height: 40px; border-radius: 50%;
+            background: rgba(8,8,18,0.9); border: 2px solid rgba(0,242,254,0.28);
+            font-size: 18px; cursor: pointer; display: none; align-items: center; justify-content: center;
+            z-index: 301; transition: all 0.2s; pointer-events: auto;
+        }
+        #emote-toggle-btn.ingame { display: flex; }
+        #emote-toggle-btn:hover { transform: translateY(-50%) scale(1.12); border-color: #00f2fe; }
+        #emote-hint { position: fixed; right: 8px; bottom: 225px; font-size: 0.58rem; color: rgba(255,255,255,0.28); text-align: center; pointer-events: none; display: none; width: 56px; }
+        #emote-hint.ingame { display: block; }
+        /* Emote shop in main menu */
+        #emote-shop-modal .emote-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-top: 14px; }
+        .emote-shop-item {
+            background: rgba(255,255,255,0.03); border: 2px solid rgba(255,255,255,0.08);
+            border-radius: 12px; padding: 14px 6px; text-align: center; cursor: pointer; transition: all 0.18s;
+        }
+        .emote-shop-item:hover { background: rgba(0,242,254,0.07); border-color: rgba(0,242,254,0.35); }
+        .emote-shop-item.equipped { border-color: #00f2fe; background: rgba(0,242,254,0.1); }
+        .emote-shop-item .emote-icon { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; margin: 0 auto 5px; }
+        .emote-shop-item .emote-name { font-size: 0.62rem; color: rgba(255,255,255,0.55); font-weight: 600; }
+        .emote-shop-item .emote-badge { font-size: 0.5rem; padding: 1px 5px; border-radius: 4px; display: inline-block; margin-top: 4px; font-weight: 800; background: rgba(16,185,129,0.12); color: #34d399; border: 1px solid rgba(16,185,129,0.28); }
+        .equipped-slots { display: flex; gap: 8px; margin: 14px 0 4px; }
+        .equipped-slot { flex: 1; text-align: center; padding: 8px 4px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px dashed rgba(255,255,255,0.1); }
+        .equipped-slot .emote-icon { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; margin: 0 auto; }
+        .equipped-slot .slot-key { font-size: 0.55rem; color: rgba(255,255,255,0.3); margin-top: 2px; }
+        /* NPC announce toast */
+        #npc-announce {
+            position: fixed; bottom: 265px; left: 50%; transform: translateX(-50%);
+            padding: 6px 18px; border-radius: 16px; font-size: 0.78rem; font-weight: 700;
+            pointer-events: none; z-index: 200; opacity: 0; transition: opacity 0.3s; white-space: nowrap;
+            background: rgba(8,8,18,0.9); border: 1px solid rgba(245,158,11,0.4); color: #fbbf24;
+        }
+        #npc-announce.visible { opacity: 1; }
+
+        /* Forum guest notice */
+        #forum-guest-notice {
+            font-size: 0.8rem; color: rgba(255,255,255,0.5);
+            text-align: center; padding: 8px 0 12px;
+        }
+        #forum-guest-notice a { color: var(--primary); cursor: pointer; }
+        #forum-guest-notice a:hover { text-decoration: underline; }
+
         /* Inventory slots */
         #inventory-slots { display: flex; gap: 10px; align-items: center; }
         .inv-slot {
@@ -722,6 +814,7 @@
 
         <div id="top-right-ui" class="pointer-events-auto">
             <button class="btn-neon" onclick="openForum()">Forum</button>
+            <button class="btn-neon" onclick="openModal('emote-shop-modal'); renderEmoteShop()" style="margin-left:8px;">Emotes</button>
         </div>
 
         <div id="main-menu" class="pointer-events-auto">
@@ -736,6 +829,42 @@
             </div>
             <div style="margin-top: 10px; color: rgba(255,215,0,0.7); font-size: 0.85rem;">
                 Get 10 kills to unlock OMEGA powers! Press Q to activate
+            </div>
+        </div>
+
+        <div id="update-panel">
+            <div class="up-header">
+                <div class="up-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="8" y="2" width="8" height="4" rx="1" fill="#00f2fe"/><rect x="4" y="4" width="16" height="18" rx="2" stroke="#00f2fe" stroke-width="2" fill="none"/><line x1="8" y1="10" x2="16" y2="10" stroke="#00f2fe" stroke-width="1.5" stroke-linecap="round"/><line x1="8" y1="14" x2="16" y2="14" stroke="#00f2fe" stroke-width="1.5" stroke-linecap="round"/><line x1="8" y1="18" x2="13" y2="18" stroke="#00f2fe" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+                <div>
+                    <div class="up-title">Latest Updates</div>
+                    <div class="up-date">Feb 2026 patch</div>
+                </div>
+            </div>
+            <div class="up-body">
+                <div class="update-entry">
+                    <span class="update-tag new">New</span>
+                    <span class="update-desc">NPCs — Common to Mythic, unique drops &amp; behavior</span>
+                </div>
+                <div class="update-entry">
+                    <span class="update-tag new">New</span>
+                    <span class="update-desc">Emotes — pick 4, use in-game with E key</span>
+                </div>
+                <div class="update-entry">
+                    <span class="update-tag new">New</span>
+                    <span class="update-desc">3-slot inventory — unlocks at 5 kills per life</span>
+                </div>
+                <div class="update-entry">
+                    <span class="update-tag new">New</span>
+                    <span class="update-desc">Sprint (Shift) — stamina drain &amp; regen</span>
+                </div>
+                <div class="update-entry">
+                    <span class="update-tag change">Change</span>
+                    <span class="update-desc">Sniper 6s · Minigun 0.2s · Others 1.5s cooldown</span>
+                </div>
+                <div class="update-entry">
+                    <span class="update-tag fix">Fix</span>
+                    <span class="update-desc">Forum visible to all — no login required</span>
+                </div>
             </div>
         </div>
 
@@ -792,7 +921,7 @@
                 </div>
                 <div class="inv-slot glass-panel locked-slot" id="inv-slot-1" onclick="selectSlot(1)">
                     <span class="slot-num">2</span>
-                    <div class="slot-lock-icon" id="inv-lock-1">🔒</div>
+                    <div class="slot-lock-icon" id="inv-lock-1"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="5" y="11" width="14" height="10" rx="2" fill="rgba(255,255,255,0.25)"/><path d="M8 11V7a4 4 0 0 1 8 0v4" stroke="rgba(255,255,255,0.4)" stroke-width="2" fill="none" stroke-linecap="round"/><circle cx="12" cy="16" r="1.5" fill="rgba(255,255,255,0.4)"/></svg></div>
                     <canvas id="inv-canvas-1" width="44" height="44" style="display:none;"></canvas>
                     <span class="power-type-badge" id="inv-badge-1" style="display:none;"></span>
                     <div class="slot-cooldown-overlay" id="inv-cd-1">
@@ -802,7 +931,7 @@
                 </div>
                 <div class="inv-slot glass-panel locked-slot" id="inv-slot-2" onclick="selectSlot(2)">
                     <span class="slot-num">3</span>
-                    <div class="slot-lock-icon" id="inv-lock-2">🔒</div>
+                    <div class="slot-lock-icon" id="inv-lock-2"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="5" y="11" width="14" height="10" rx="2" fill="rgba(255,255,255,0.25)"/><path d="M8 11V7a4 4 0 0 1 8 0v4" stroke="rgba(255,255,255,0.4)" stroke-width="2" fill="none" stroke-linecap="round"/><circle cx="12" cy="16" r="1.5" fill="rgba(255,255,255,0.4)"/></svg></div>
                     <canvas id="inv-canvas-2" width="44" height="44" style="display:none;"></canvas>
                     <span class="power-type-badge" id="inv-badge-2" style="display:none;"></span>
                     <div class="slot-cooldown-overlay" id="inv-cd-2">
@@ -887,25 +1016,48 @@
                 <button class="btn-neon" onclick="createPost()">Post Message</button>
             </div>
             
-            <div id="forum-login-required" class="login-required-msg">
-                <p>Please <a onclick="closeModal('forum-modal'); openModal('login-modal')">login</a> or <a onclick="closeModal('forum-modal'); openModal('signup-modal')">sign up</a> to create posts and comments.</p>
+            <div id="forum-guest-notice" style="display:none; text-align:center; padding: 8px 0 12px; font-size:0.82rem; color:rgba(255,255,255,0.5);">
+                <a onclick="closeModal('forum-modal'); openModal('login-modal')" style="color:var(--primary); cursor:pointer;">Login</a> or <a onclick="closeModal('forum-modal'); openModal('signup-modal')" style="color:var(--primary); cursor:pointer;">sign up</a> to post &amp; comment.
             </div>
             
             <div id="forum-posts"></div>
         </div>
     </div>
     <div id="baby-controls" class="pointer-events-auto">
-        <h4>🍼 BABY CONTROLS</h4>
+        <h4><svg width="14" height="14" viewBox="0 0 24 24" fill="#ff69b4" style="vertical-align:middle;margin-right:4px;"><circle cx="12" cy="8" r="5"/><path d="M4 20c0-4 3.58-7 8-7s8 3 8 7" fill="#ff69b4"/></svg> BABY CONTROLS</h4>
         <div style="font-size:0.75rem; color:rgba(255,255,255,0.6); margin-bottom:8px;">Baby moves toward your mouse. HP: <span id="baby-hp-text">50</span>/50</div>
         <div class="baby-hp-bar"><div class="baby-hp-fill" id="baby-hp-fill" style="width:100%"></div></div>
         <div class="baby-btn-row">
             <button class="baby-btn recall" onclick="recallBaby()">↩ Return</button>
-            <button class="baby-btn destruct" onclick="destructBaby()">💥 Self-Destruct</button>
+            <button class="baby-btn destruct" onclick="destructBaby()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="vertical-align:middle;margin-right:3px;"><circle cx="12" cy="12" r="9" fill="#ef4444"/><path d="M8 8 L16 16 M16 8 L8 16" stroke="white" stroke-width="2.5" stroke-linecap="round"/></svg> Self-Destruct</button>
         </div>
     </div>
             <div id="toast-container"></div>
 
     <div id="stamina-notif">Stamina Depleted</div>
+    <div id="npc-announce"></div>
+    <button id="emote-toggle-btn" onclick="toggleEmoteWheel()" title="Emotes (E)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="#00f2fe" stroke-width="2" fill="rgba(0,242,254,0.15)" stroke-linejoin="round"/><circle cx="9" cy="10" r="1.2" fill="#00f2fe"/><circle cx="15" cy="10" r="1.2" fill="#00f2fe"/><path d="M8 13 Q12 16 16 13" stroke="#00f2fe" stroke-width="1.5" stroke-linecap="round" fill="none"/></svg></button>
+    <div id="emote-hint">E key</div>
+    <div id="emote-wheel">
+        <button class="emote-btn-ingame" id="emote-slot-0" onclick="useEmote(0)"></button>
+        <button class="emote-btn-ingame" id="emote-slot-1" onclick="useEmote(1)"></button>
+        <button class="emote-btn-ingame" id="emote-slot-2" onclick="useEmote(2)"></button>
+        <button class="emote-btn-ingame" id="emote-slot-3" onclick="useEmote(3)"></button>
+    </div>
+    <div id="emote-shop-modal" class="modal-overlay pointer-events-auto">
+        <div class="glass-panel modal-content" style="max-width:500px;">
+            <span class="close-btn" onclick="closeModal('emote-shop-modal')">&#xd7;</span>
+            <h2 style="margin-bottom:6px; display:flex; align-items:center; gap:8px;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="#00f2fe" stroke-width="2" fill="rgba(0,242,254,0.15)"/><circle cx="9" cy="10" r="1.2" fill="#00f2fe"/><circle cx="15" cy="10" r="1.2" fill="#00f2fe"/><path d="M8 13 Q12 16 16 13" stroke="#00f2fe" stroke-width="1.5" stroke-linecap="round" fill="none"/></svg> Emote Collection</h2>
+            <p style="font-size:0.78rem;color:rgba(255,255,255,0.45);margin-bottom:4px;">All 8 emotes are free! Click to equip up to 4.</p>
+            <div class="equipped-slots" id="equipped-slots-display">
+                <div class="equipped-slot"><span class="emote-icon" id="eq-slot-0">—</span><div class="slot-key">Slot 1</div></div>
+                <div class="equipped-slot"><span class="emote-icon" id="eq-slot-1">—</span><div class="slot-key">Slot 2</div></div>
+                <div class="equipped-slot"><span class="emote-icon" id="eq-slot-2">—</span><div class="slot-key">Slot 3</div></div>
+                <div class="equipped-slot"><span class="emote-icon" id="eq-slot-3">—</span><div class="slot-key">Slot 4</div></div>
+            </div>
+            <div class="emote-grid" id="emote-shop-grid"></div>
+        </div>
+    </div>
 
     <script>
         const CONFIG = {
@@ -992,6 +1144,37 @@
         const RARITY_COLORS = { common: '#9ca3af', rare: '#3b82f6', epic: '#a855f7', legendary: '#f59e0b', omega: '#ffd700', admin: '#ff00ff', mythic: '#ff00cc' };
         const ALL_POWERS = { ...POWERS, ...OMEGA_POWER, ...ADMIN_POWERS };
 
+        const EMOTE_CATALOG = [
+            { key: 'laugh',  name: 'Laughing'  },
+            { key: 'heart',  name: 'Heart'      },
+            { key: 'cry',    name: 'Crying'     },
+            { key: 'fire',   name: 'Fire'       },
+            { key: 'rage',   name: 'Rage'       }
+        ];
+
+        // Custom SVG emote strings (used in DOM)
+        const EMOTE_SVG_STRS = {
+            laugh: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 36" width="28" height="28"><circle cx="18" cy="18" r="17" fill="#FFD93D"/><path d="M9 21 Q18 30 27 21" fill="none" stroke="#333" stroke-width="2.5" stroke-linecap="round"/><path d="M9 21 Q18 31 27 21 Z" fill="#8B2020"/><circle cx="13" cy="14" r="2.5" fill="#333"/><circle cx="23" cy="14" r="2.5" fill="#333"/><path d="M11 13 Q13 10 15 13" fill="none" stroke="#333" stroke-width="1.5"/><path d="M21 13 Q23 10 25 13" fill="none" stroke="#333" stroke-width="1.5"/><ellipse cx="7" cy="16" rx="2" ry="3" fill="#9DD4F8" opacity="0.8"/><ellipse cx="29" cy="16" rx="2" ry="3" fill="#9DD4F8" opacity="0.8"/></svg>`,
+            heart: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 36" width="28" height="28"><path d="M18 30 L5 17 C2 14 2 9 5 7 C7 5 11 5 13 8 L18 13 L23 8 C25 5 29 5 31 7 C34 9 34 14 31 17 Z" fill="#FF3860"/><path d="M11 8 Q8 7 7 10" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="2" stroke-linecap="round"/></svg>`,
+            thumbs: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 36" width="28" height="28"><rect x="5" y="20" width="8" height="12" rx="2" fill="#4A90D9"/><path d="M13 22 L19 14 Q21 10 24 10 L27 10 Q29 10 29 12 L29 13 Q31 13 31 15 L31 16 Q33 16 33 18 L33 19 Q33 21 31 21 L18 21 Q17 25 16 27 L14 27 Z" fill="#4A90D9"/><path d="M19 14 Q21 11 24 11" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1.5" stroke-linecap="round"/></svg>`,
+            cry:   `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 36" width="28" height="28"><circle cx="18" cy="17" r="15" fill="#85C1E9"/><path d="M11 22 Q18 18 25 22" fill="none" stroke="#333" stroke-width="2.5" stroke-linecap="round"/><circle cx="13" cy="14" r="2.5" fill="#333"/><circle cx="23" cy="14" r="2.5" fill="#333"/><path d="M10 12 Q13 10 15 12" fill="none" stroke="#333" stroke-width="1.5"/><path d="M21 12 Q23 10 26 12" fill="none" stroke="#333" stroke-width="1.5"/><path d="M13 17 Q12 22 11 27 Q13 28 14 23 Z" fill="#4A90D9"/><path d="M23 17 Q24 22 25 27 Q23 28 22 23 Z" fill="#4A90D9"/></svg>`,
+            fire:  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 36" width="28" height="28"><path d="M18 2 Q14 10 16 14 Q12 10 14 5 Q8 12 8 20 C8 27 12.5 34 18 34 C23.5 34 28 27 28 20 C28 14 24 8 18 2Z" fill="#FF6B2B"/><path d="M18 14 Q16 18 17 21 Q14 18 15 14 Q12 18 12 22 C12 26 14.7 30 18 30 C21.3 30 24 26 24 22 C24 18 21 15 18 14Z" fill="#FFD93D"/><circle cx="18" cy="25" r="4" fill="#FF4500" opacity="0.6"/></svg>`,
+            skull: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 36" width="28" height="28"><ellipse cx="18" cy="16" rx="13" ry="14" fill="#EAECEE"/><rect x="11" y="28" width="4" height="5" rx="1" fill="#EAECEE"/><rect x="17" y="28" width="4" height="5" rx="1" fill="#EAECEE"/><rect x="23" y="28" width="2" height="5" rx="1" fill="#EAECEE"/><ellipse cx="13" cy="15" rx="4" ry="4.5" fill="#1a1a2e"/><ellipse cx="23" cy="15" rx="4" ry="4.5" fill="#1a1a2e"/><path d="M13 20 L15 22 L13 24 M23 20 L21 22 L23 24" fill="none" stroke="#EAECEE" stroke-width="1.5" stroke-linecap="round"/><rect x="9" y="27" width="18" height="6" rx="2" fill="#BDC3C7"/></svg>`,
+            cool:  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 36" width="28" height="28"><circle cx="18" cy="18" r="17" fill="#FFD93D"/><path d="M9 24 Q18 29 27 24" fill="none" stroke="#333" stroke-width="2.5" stroke-linecap="round"/><rect x="7" y="12" width="9" height="6" rx="3" fill="#1a1a2e"/><rect x="20" y="12" width="9" height="6" rx="3" fill="#1a1a2e"/><rect x="16" y="14" width="4" height="2" fill="#333"/><path d="M8 13 Q10 10 14 12" fill="none" stroke="#1a1a2e" stroke-width="1.5"/><path d="M22 12 Q26 10 28 13" fill="none" stroke="#1a1a2e" stroke-width="1.5"/></svg>`,
+            rage:  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 36" width="28" height="28"><circle cx="18" cy="18" r="17" fill="#E74C3C"/><path d="M10 24 Q14 21 18 23 Q22 21 26 24" fill="none" stroke="#333" stroke-width="2.5" stroke-linecap="round"/><circle cx="13" cy="17" r="2.5" fill="#333"/><circle cx="23" cy="17" r="2.5" fill="#333"/><path d="M9 13 L15 15" stroke="#333" stroke-width="2.5" stroke-linecap="round"/><path d="M27 13 L21 15" stroke="#333" stroke-width="2.5" stroke-linecap="round"/><path d="M13 25 L15 25 L15 27 L17 27 L17 25 L19 25 L19 27 L21 27 L21 25 L23 25" fill="none" stroke="#8B0000" stroke-width="1.5"/></svg>`
+        };
+
+        // Preload emote images for canvas rendering
+        const EMOTE_IMGS = {};
+        (function preloadEmotes() {
+            Object.entries(EMOTE_SVG_STRS).forEach(([key, svg]) => {
+                const img = new Image();
+                img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+                EMOTE_IMGS[key] = img;
+            });
+        })();
+        const NPC_COLORS = { common:'#9ca3af', rare:'#3b82f6', epic:'#a855f7', legendary:'#f59e0b', mythic:'#ff00cc' };
+        const NPC_RADII  = { common:18, rare:20, epic:23, legendary:27, mythic:32 };
         let sbClient = null, currentUser = null, dbUsername = '', isAdmin = false;
         let socket = null, myId = null, isConnecting = false, connectionAttempts = 0;
         let powerupIdCounter = 10000, projectileIdCounter = 50000;
@@ -1008,6 +1191,10 @@
             baby: null, babyShootCooldown: 0, remoteBabies: {}, babyBroadcastTimer: 0,
             laserBeams: [], rocketTrails: [], timebombs: [],
             bosses: {},
+            npcs: {},
+            equippedEmotes: ["laugh","heart","cry","fire"],
+            activeEmoteBubbles: {},
+            emoteWheelOpen: false,
             // Inventory system
             inventory: [null, null, null],
             activeSlot: 0,
@@ -1096,13 +1283,13 @@
 
         function updateForumUI() {
             const createUI = document.getElementById('forum-create-ui');
-            const loginRequired = document.getElementById('forum-login-required');
+            const guestNotice = document.getElementById('forum-guest-notice');
             if (currentUser) {
                 createUI.style.display = 'block';
-                loginRequired.style.display = 'none';
+                if (guestNotice) guestNotice.style.display = 'none';
             } else {
                 createUI.style.display = 'none';
-                loginRequired.style.display = 'block';
+                if (guestNotice) guestNotice.style.display = 'block';
             }
         }
 
@@ -1215,11 +1402,16 @@
         function openForum() { 
             openModal('forum-modal'); 
             updateForumUI();
-            if (sbClient) loadPosts(); 
+            loadPosts();
         }
 
         async function loadPosts() {
-            if (!sbClient) return;
+            if (!sbClient) {
+                document.getElementById('forum-posts').innerHTML = '<p style="text-align:center; opacity:0.6;">Forum unavailable — please refresh.</p>';
+                return;
+            }
+            const container = document.getElementById('forum-posts');
+            container.innerHTML = '<p style="text-align:center; opacity:0.5; font-size:0.85rem;">Loading...</p>';
             try {
                 const { data, error } = await sbClient.from('forum_posts').select('*').order('created_at', { ascending: false }).limit(30);
                 const container = document.getElementById('forum-posts');
@@ -1680,12 +1872,18 @@
         document.getElementById('leaderboard').style.display = 'block';
         document.getElementById('chat-wrap').style.display = 'block';
         document.getElementById('kill-counter').style.display = 'block';
+        const updatePanel = document.getElementById('update-panel');
+        if (updatePanel) updatePanel.style.display = 'none';
         if (isAdmin) document.getElementById('admin-toggle').style.display = 'block';
+        // Show emote button
+        document.getElementById('emote-toggle-btn').classList.add('ingame');
+        document.getElementById('emote-hint').classList.add('ingame');
+        updateEmoteWheelBtns();
         isConnecting = false;
         connectionAttempts = 0;
         // Announce owner joining to everyone
         if (isAdmin && socket) {
-            socket.emit('adminAnnouncement', { message: '👑 The Owner Astraphobia Has Joined!' });
+            socket.emit('adminAnnouncement', { message: '[ OWNER ] Astraphobia Has Joined!' });
         }
     });
 
@@ -1722,6 +1920,8 @@
             state.timestopActive = false; state.hitCooldowns = {}; state.isDead = false;
             state.nextOmegaThreshold = 10; state.baby = null; state.babyShootCooldown = 0; state.remoteBabies = {};
             state.bosses = {};
+            state.npcs = {};
+            state.activeEmoteBubbles = {};
             state.inventory = [null, null, null]; state.activeSlot = 0;
             state.inventorySlots = 1; state.killsThisLife = 0; state.slotCooldowns = [0, 0, 0];
             state.sprinting = false; state.stamina = 100; state.staminaDepleted = false; state.staminaDepletedTimer = 0;
@@ -1755,6 +1955,13 @@
                 if (data.bosses) {
                     for (const id in data.bosses) {
                         state.bosses[id] = { ...data.bosses[id], targetX: data.bosses[id].x, targetY: data.bosses[id].y };
+                    }
+                }
+                // Load existing NPCs
+                state.npcs = {};
+                if (data.npcs) {
+                    for (const id in data.npcs) {
+                        state.npcs[id] = { ...data.npcs[id], targetX: data.npcs[id].x, targetY: data.npcs[id].y };
                     }
                 }
                 
@@ -1888,6 +2095,32 @@
                 }
             });
 
+            // NPC SOCKET EVENTS
+            socket.on('npcSpawn', (data) => {
+                state.npcs[data.id] = { ...data, targetX: data.x, targetY: data.y };
+            });
+            socket.on('npcMoved', (data) => {
+                if (!state.npcs[data.npcId]) state.npcs[data.npcId] = { id: data.npcId };
+                const n = state.npcs[data.npcId];
+                n.targetX = data.x; n.targetY = data.y;
+                n.angle = data.angle; n.hp = data.hp;
+            });
+            socket.on('npcDied', (data) => {
+                const n = state.npcs[data.npcId];
+                if (n) {
+                    const color = NPC_COLORS[data.rarity] || '#fff';
+                    for (let i = 0; i < 30; i++) spawnParticles(n.x||data.x, n.y||data.y, 1, color);
+                    state.explosions.push({ x: n.x||data.x, y: n.y||data.y, radius: 15, maxRadius: 80, life: 0.5, color });
+                    if (data.rarity === 'legendary' || data.rarity === 'mythic') showNpcAnnounce(data.rarity);
+                }
+                delete state.npcs[data.npcId];
+                if (data.drops) data.drops.forEach(d => { if (ALL_POWERS[d.type]) state.powerups[d.id] = d; });
+            });
+            // EMOTE SOCKET EVENTS
+            socket.on('playerEmote', (data) => {
+                state.activeEmoteBubbles[data.playerId] = { emote: data.emote, timer: 3.0 };
+            });
+
             socket.on('playerDied', data => {
                 if (data.victimId === myId && !state.isDead) {
                     state.me.hp = 0;
@@ -1910,7 +2143,7 @@
                     if (state.killsThisLife === 5 && state.inventorySlots < 3) {
                         state.inventorySlots = 3;
                         updateInventoryUI();
-                        showToast('🎒 3 Inventory Slots Unlocked!', 'success');
+                        showToast('+ 3 Inventory Slots Unlocked!', 'success');
                     }
                     if (state.kills >= state.nextOmegaThreshold && !state.omegaUnlocked) unlockOmega();
                 }
@@ -1940,7 +2173,7 @@
                             updateInventoryUI();
                             spawnParticles(state.me.x, state.me.y, 60, '#ff6600');
                             state.explosions.push({ x: state.me.x, y: state.me.y, radius: 20, maxRadius: 200, life: 1, color: '#ff6600' });
-                            showToast('🔥 PHOENIX REVIVED! +80 HP', 'mythic');
+                            showToast('PHOENIX REVIVED! +80 HP', 'mythic');
                             broadcastState();
                         } else {
                             state.isDead = true;
@@ -2427,7 +2660,7 @@
                 if (state.omegaTimer <= 0) {
                     const wasMirror = state.mirrorActive;
                     state.mirrorActive = false; state.timestopActive = false;
-                    showToast(wasMirror ? '🛡️ Mirror Shield ended!' : 'Omega ended!', 'warning'); updateScreenEffects();
+                    showToast(wasMirror ? 'Mirror Shield ended!' : 'Omega ended!', 'warning'); updateScreenEffects();
                 }
             }
             if (state.cloneTimer > 0) {
@@ -2553,6 +2786,11 @@
             }
             // Legacy shoot cooldown tick (for backward compat)
             if (state.shootCooldown > 0) state.shootCooldown = Math.max(0, state.shootCooldown - dt);
+            // Update emote bubble timers
+            for (const pid in state.activeEmoteBubbles) {
+                state.activeEmoteBubbles[pid].timer -= dt;
+                if (state.activeEmoteBubbles[pid].timer <= 0) delete state.activeEmoteBubbles[pid];
+            }
 
             state.clones.forEach((clone, idx) => {
                 const followDist = 80 + idx * 50;
@@ -2889,10 +3127,38 @@
             for (let ownerId in state.remoteClones) {
                 for (let clone of state.remoteClones[ownerId]) drawPlayer(clone, false, true);
             }
+            // Draw NPCs
+            for (const npcId in state.npcs) {
+                const npc = state.npcs[npcId];
+                if (!npc || !npc.rarity || (npc.hp !== undefined && npc.hp <= 0)) continue;
+                // Smooth movement
+                if (npc.targetX !== undefined) {
+                    npc.x = (npc.x || npc.targetX) + ((npc.targetX - (npc.x || npc.targetX)) * 0.2);
+                    npc.y = (npc.y || npc.targetY) + ((npc.targetY - (npc.y || npc.targetY)) * 0.2);
+                }
+                drawNPC(npc);
+                // NPC hit detection for local projectiles
+                for (let pid in state.projectiles) {
+                    const proj = state.projectiles[pid];
+                    if (proj.owner !== myId || proj.isRemote) continue;
+                    const hitDist = Math.sqrt((npc.x - proj.x)**2 + (npc.y - proj.y)**2);
+                    const hitKey = 'npc_' + npcId + '_' + pid;
+                    const npcRadius = NPC_RADII[npc.rarity] || 20;
+                    if (hitDist < npcRadius + 10 && !state.hitCooldowns[hitKey]) {
+                        state.hitCooldowns[hitKey] = Date.now();
+                        socket.emit('npcHit', { npcId, damage: proj.damage || 20 });
+                        spawnParticles(npc.x, npc.y, 6, NPC_COLORS[npc.rarity] || '#fff');
+                        spawnDamageNumber(npc.x, npc.y, proj.damage || 20, 'damage');
+                        if (!proj.pierce) delete state.projectiles[pid];
+                    }
+                }
+            }
             for (let id in state.players) {
                 if (state.players[id].hp > 0) drawPlayer(state.players[id], false, false);
             }
             if (state.me && !state.isDead) drawPlayer(state.me, true, false);
+            // Draw emote bubbles above players
+            drawEmoteBubbles();
             // Draw baby
             if (state.baby) {
                 ctx.save();
@@ -2984,7 +3250,7 @@
                 ctx.translate(bx, by);
                 ctx.fillStyle = '#ff4444'; ctx.font = 'bold 18px Outfit'; ctx.textAlign = 'center';
                 ctx.shadowColor = '#000'; ctx.shadowBlur = 5;
-                ctx.fillText(`💀 BOSS ${boss.label || ''}`, 0, -70);
+                ctx.fillText(`[BOSS] ${boss.label || ''}`, 0, -70);
                 ctx.font = 'bold 13px Outfit'; ctx.fillStyle = '#fbbf24';
                 ctx.fillText(`${Math.round(boss.hp || 0)} / ${boss.maxHp || 1000} HP`, 0, -53);
                 ctx.fillStyle = 'rgba(0,0,0,0.5)';
@@ -3052,7 +3318,7 @@
                 ctx.shadowBlur = 12; ctx.shadowColor = '#ffd700';
                 ctx.fillStyle = `rgba(255,215,0,${ownerPulse})`;
                 ctx.font = 'bold 10px Outfit';
-                ctx.fillText('👑 OWNER', 0, -68);
+                ctx.fillText('* OWNER *', 0, -68);
                 ctx.restore();
             }
 
@@ -3158,6 +3424,109 @@
             ctx.beginPath(); ctx.arc(10, -7, 4, 0, Math.PI * 2); ctx.arc(10, 7, 4, 0, Math.PI * 2); ctx.fill();
             ctx.restore();
             ctx.globalAlpha = 1;
+        }
+
+        function drawNPC(npc) {
+            const color = NPC_COLORS[npc.rarity] || '#9ca3af';
+            const r = NPC_RADII[npc.rarity] || 20;
+            const hpMax = { common:60, rare:150, epic:320, legendary:750, mythic:1500 }[npc.rarity] || 100;
+            const hpPct = Math.max(0, Math.min(1, (npc.hp || 0) / hpMax));
+            ctx.save();
+            ctx.translate(npc.x, npc.y);
+            // Aura glow
+            const pulse = Math.sin(Date.now() / 300) * 0.3 + 0.7;
+            if (npc.rarity === 'mythic' || npc.rarity === 'legendary') {
+                const auraR = r + 20 + Math.sin(Date.now()/200)*8;
+                const grad = ctx.createRadialGradient(0,0,r,0,0,auraR);
+                grad.addColorStop(0, color.replace(')', ',0.35)').replace('rgb','rgba').replace('#', 'rgba(').replace(/rgba\(([\da-f]{2})([\da-f]{2})([\da-f]{2}),/, (m,r,g,b) => 'rgba('+parseInt(r,16)+','+parseInt(g,16)+','+parseInt(b,16)+','));
+                grad.addColorStop(1, 'transparent');
+                ctx.fillStyle = color + '44';
+                ctx.beginPath(); ctx.arc(0,0,auraR,0,Math.PI*2); ctx.fill();
+            }
+            // Body
+            ctx.shadowBlur = npc.rarity === 'mythic' ? 25 : (npc.rarity === 'legendary' ? 18 : 10);
+            ctx.shadowColor = color;
+            ctx.fillStyle = color;
+            ctx.rotate(npc.angle || 0);
+            if (npc.rarity === 'mythic') {
+                // Star-shaped
+                ctx.beginPath();
+                for (let i=0;i<10;i++) {
+                    const ang = (i/10)*Math.PI*2 - Math.PI/2;
+                    const rad = i%2===0 ? r : r*0.5;
+                    if(i===0) ctx.moveTo(Math.cos(ang)*rad, Math.sin(ang)*rad);
+                    else ctx.lineTo(Math.cos(ang)*rad, Math.sin(ang)*rad);
+                }
+                ctx.closePath(); ctx.fill();
+            } else if (npc.rarity === 'legendary') {
+                // Diamond
+                ctx.beginPath();
+                ctx.moveTo(0,-r); ctx.lineTo(r,0); ctx.lineTo(0,r); ctx.lineTo(-r,0);
+                ctx.closePath(); ctx.fill();
+            } else {
+                ctx.beginPath(); ctx.arc(0,0,r,0,Math.PI*2); ctx.fill();
+            }
+            ctx.shadowBlur = 0;
+            // Eyes
+            ctx.fillStyle = 'rgba(0,0,0,0.7)';
+            ctx.beginPath(); ctx.arc(r*0.45,-r*0.25,r*0.22,0,Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(r*0.45,r*0.25,r*0.22,0,Math.PI*2); ctx.fill();
+            ctx.restore();
+            // Labels above
+            ctx.save();
+            ctx.translate(npc.x, npc.y);
+            const rarityLabel = { common:'COMMON', rare:'RARE', epic:'EPIC', legendary:'LEGENDARY', mythic:'MYTHIC' }[npc.rarity] || '';
+            ctx.fillStyle = color; ctx.font = 'bold 9px Outfit'; ctx.textAlign = 'center';
+            ctx.shadowColor = '#000'; ctx.shadowBlur = 4;
+            ctx.fillText(rarityLabel, 0, -r-24);
+            ctx.fillStyle = 'rgba(255,255,255,0.7)'; ctx.font = 'bold 9px Outfit';
+            ctx.fillText(Math.round(npc.hp||0)+'/'+hpMax+' HP', 0, -r-12);
+            // HP bar
+            ctx.fillStyle = 'rgba(0,0,0,0.5)';
+            ctx.beginPath(); ctx.roundRect(-25,-r-8,50,5,3); ctx.fill();
+            ctx.fillStyle = hpPct>0.5 ? '#10b981' : (hpPct>0.25 ? '#f59e0b' : '#ef4444');
+            ctx.beginPath(); ctx.roundRect(-25,-r-8,50*hpPct,5,3); ctx.fill();
+            ctx.restore();
+        }
+
+        function drawEmoteBubbles() {
+            // Draw emote bubble for local player
+            if (state.me && !state.isDead && state.activeEmoteBubbles['__me__']) {
+                const b = state.activeEmoteBubbles['__me__'];
+                drawEmoteBubble(state.me.x, state.me.y, b.emote);
+            }
+            // Draw remote players' emotes
+            for (const pid in state.activeEmoteBubbles) {
+                if (pid === '__me__') continue;
+                const p = state.players[pid];
+                if (!p || p.hp <= 0) continue;
+                drawEmoteBubble(p.x, p.y, state.activeEmoteBubbles[pid].emote);
+            }
+        }
+
+        function drawEmoteBubble(x, y, emoteKey) {
+            ctx.save();
+            ctx.translate(x, y - 70);
+            ctx.fillStyle = 'rgba(10,10,20,0.88)';
+            ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.roundRect(-18,-18,36,36,10);
+            ctx.fill(); ctx.stroke();
+            // Tail
+            ctx.fillStyle = 'rgba(10,10,20,0.88)';
+            ctx.beginPath(); ctx.moveTo(-5,16); ctx.lineTo(5,16); ctx.lineTo(0,24); ctx.closePath(); ctx.fill();
+            // Draw SVG icon
+            const img = EMOTE_IMGS[emoteKey];
+            if (img && img.complete && img.naturalWidth > 0) {
+                ctx.drawImage(img, -13, -13, 26, 26);
+            } else {
+                // Fallback: draw a question mark
+                ctx.fillStyle = '#00f2fe'; ctx.font = 'bold 16px Arial';
+                ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                ctx.fillText('?', 0, 0);
+            }
+            ctx.restore();
         }
 
         function drawPowerup(p) {
@@ -3358,6 +3727,7 @@
             if (e.code === 'Digit1') selectSlot(0);
             if (e.code === 'Digit2') selectSlot(1);
             if (e.code === 'Digit3') selectSlot(2);
+            if (e.code === 'KeyE') { e.preventDefault(); if (state.running && !state.isDead) toggleEmoteWheel(); }
         });
 
         window.addEventListener('keyup', e => {
@@ -3365,6 +3735,100 @@
                 state.sprinting = false;
             }
         });
+
+        // ── EMOTE SYSTEM ──────────────────────────────────────────
+        function toggleEmoteWheel() {
+            if (!state.running) return;
+            state.emoteWheelOpen = !state.emoteWheelOpen;
+            const wheel = document.getElementById('emote-wheel');
+            if (state.emoteWheelOpen) wheel.classList.add('visible');
+            else wheel.classList.remove('visible');
+        }
+
+        function useEmote(slotIdx) {
+            if (!state.me || state.isDead) return;
+            const emote = state.equippedEmotes[slotIdx];
+            if (!emote) return;
+            // Show locally above our own player
+            state.activeEmoteBubbles['__me__'] = { emote, timer: 3.0 };
+            // Broadcast to others
+            if (socket) socket.emit('useEmote', { emote });
+            // Close wheel
+            state.emoteWheelOpen = false;
+            document.getElementById('emote-wheel').classList.remove('visible');
+        }
+
+        function renderEmoteShop() {
+            const grid = document.getElementById('emote-shop-grid');
+            if (!grid) return;
+            grid.innerHTML = '';
+            EMOTE_CATALOG.forEach((em, idx) => {
+                const div = document.createElement('div');
+                div.className = 'emote-shop-item' + (state.equippedEmotes.includes(em.key) ? ' equipped' : '');
+                div.innerHTML = '<span class="emote-icon">'+EMOTE_SVG_STRS[em.key]+'</span><div class="emote-name">'+em.name+'</div><span class="emote-badge">FREE</span>';
+                div.onclick = () => toggleEquipEmote(em.key);
+                grid.appendChild(div);
+            });
+            updateEquippedDisplay();
+        }
+
+        function toggleEquipEmote(emoji) {
+            const idx = state.equippedEmotes.indexOf(emoji);
+            if (idx >= 0) {
+                // Unequip
+                state.equippedEmotes.splice(idx, 1);
+            } else if (state.equippedEmotes.length < 4) {
+                // Equip
+                state.equippedEmotes.push(emoji);
+            } else {
+                // Replace first
+                state.equippedEmotes.shift();
+                state.equippedEmotes.push(emoji);
+            }
+            updateEquippedDisplay();
+            renderEmoteShop();
+            updateEmoteWheelBtns();
+        }
+
+        function updateEquippedDisplay() {
+            for (let i = 0; i < 4; i++) {
+                const el = document.getElementById('eq-slot-'+i);
+                if (el) {
+                    const key = state.equippedEmotes[i];
+                    el.innerHTML = key && EMOTE_SVG_STRS[key] ? EMOTE_SVG_STRS[key] : '<span style="color:rgba(255,255,255,0.4);font-size:1.1rem">—</span>';
+                }
+            }
+        }
+
+        function updateEmoteWheelBtns() {
+            for (let i = 0; i < 4; i++) {
+                const btn = document.getElementById('emote-slot-'+i);
+                if (btn) {
+                    const key = state.equippedEmotes[i];
+                    btn.innerHTML = key && EMOTE_SVG_STRS[key] ? EMOTE_SVG_STRS[key] : '';
+                }
+            }
+        }
+
+        function showNpcAnnounce(rarity) {
+            const el = document.getElementById('npc-announce');
+            if (!el) return;
+            const labels = { legendary: '[ LEGENDARY ] NPC defeated! Legendary loot dropped!', mythic: '[ MYTHIC ] NPC defeated! Mythic loot dropped!' };
+            el.textContent = labels[rarity] || '';
+            el.classList.add('visible');
+            setTimeout(() => el.classList.remove('visible'), 4000);
+        }
+        // ──────────────────────────────────────────────────────────
+
+        // Periodically clean up stale NPC hit cooldowns (older than 10s)
+        setInterval(() => {
+            const now = Date.now();
+            for (const key in state.hitCooldowns) {
+                if (typeof state.hitCooldowns[key] === 'number' && now - state.hitCooldowns[key] > 10000) {
+                    delete state.hitCooldowns[key];
+                }
+            }
+        }, 15000);
 
         function selectSlot(idx) {
             if (!state.me || idx >= state.inventorySlots) return;
@@ -3806,7 +4270,7 @@
                         spawnDamageNumber(state.me.x, state.me.y, healAmount, 'heal');
                     }
                     tryDamageBoss(state.me.x, state.me.y, soulRadius, 35);
-                    showToast(`💀 SOUL RIP! (${soulsCaught} souls torn)`, 'mythic'); used = true; break;
+                    showToast(`SOUL RIP! (${soulsCaught} souls torn)`, 'mythic'); used = true; break;
                 // NEW FUNCTIONAL POWERS
                 case 'gravitypull':
                     // Pull all nearby players and powerups toward you
@@ -3831,7 +4295,7 @@
                     state.explosions.push({ x: state.me.x, y: state.me.y, radius: 50, maxRadius: pullRadius, life: 1, color: '#7c3aed' });
                     socket.emit('abilityUsed', { type: 'gravitypull', x: state.me.x, y: state.me.y, id: myId });
                     tryDamageBoss(state.me.x, state.me.y, pullRadius, 20);
-                    showToast('🌀 Gravity Pull!', 'mythic'); used = true; break;
+                    showToast('Gravity Pull!', 'mythic'); used = true; break;
                 case 'mirror':
                     // Reflect projectiles back at attackers
                     state.mirrorActive = true;
@@ -3846,7 +4310,7 @@
                     }
                     socket.emit('abilityUsed', { type: 'mirror', x: state.me.x, y: state.me.y, id: myId });
                     updateScreenEffects();
-                    showToast('🛡️ Mirror Shield Active!', 'mythic'); used = true; break;
+                    showToast('Mirror Shield Active!', 'mythic'); used = true; break;
                 case 'chaos':
                     // Random teleport and damage in area
                     const chaosX = state.mouse.worldX;
@@ -3867,7 +4331,7 @@
                     }
                     state.explosions.push({ x: chaosX, y: chaosY, radius: 30, maxRadius: 250, life: 1, color: '#ec4899' });
                     tryDamageBoss(chaosX, chaosY, 250, 45);
-                    showToast('💫 CHAOS ORB!', 'mythic'); used = true; break;
+                    showToast('CHAOS ORB!', 'mythic'); used = true; break;
                 case 'lightning':
                     // Strike lightning at mouse position - doesn't damage self
                     const ltx = state.mouse.worldX, lty = state.mouse.worldY;
@@ -3888,7 +4352,7 @@
                             tryDamageBoss(boltX, boltY, 90, 35);
                         }, i * 120);
                     }
-                    showToast('⚡ LIGHTNING STRIKE!', 'mythic'); used = true; break;
+                    showToast('LIGHTNING STRIKE!', 'mythic'); used = true; break;
                 case 'baby':
                     // Spawn a baby mini-player
                     if (state.baby) { showToast('Baby already active!', 'mythic'); return; }
@@ -3900,7 +4364,7 @@
                     document.getElementById('baby-controls').classList.add('visible');
                     spawnParticles(state.baby.x, state.baby.y, 30, '#ff69b4');
                     socket.emit('abilityUsed', { type: 'babyspawn', x: state.baby.x, y: state.baby.y, id: myId });
-                    showToast('🍼 Baby spawned! Drag your mouse to guide it.', 'mythic');
+                    showToast('Baby spawned! Drag your mouse to guide it.', 'mythic');
                     used = true; break;
                 case 'soulsteal':
                     // Drain HP from all nearby players and gain it back
@@ -3921,9 +4385,9 @@
                     emitAbilityEffect('soulrip', state.me.x, state.me.y);
                     if (stolen > 0) spawnDamageNumber(state.me.x, state.me.y, stolen, 'heal');
                     tryDamageBoss(state.me.x, state.me.y, 350, 60);
-                    showToast('🔮 SOUL STEAL! Life drained!', 'mythic'); used = true; break;
+                    showToast('SOUL STEAL! Life drained!', 'mythic'); used = true; break;
                 case 'phoenix':
-                    showToast('🔥 Phoenix: You will auto-revive on death!', 'mythic'); return;
+                    showToast('Phoenix: You will auto-revive on death!', 'mythic'); return;
                 // ADMIN POWERS - ACTUALLY DEVASTATING
                 case 'apocalypse':
                     // Screen-wide devastation - pre-generate positions for sync
@@ -4291,7 +4755,7 @@
             emitAbilityEffect('shockwave', state.baby.x, state.baby.y);
             state.baby = null;
             document.getElementById('baby-controls').classList.remove('visible');
-            showToast('💥 Baby self-destructed!', 'mythic');
+            showToast('Baby self-destructed!', 'mythic');
         }
 
         function sendChat() {
