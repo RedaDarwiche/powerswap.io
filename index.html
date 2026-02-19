@@ -881,8 +881,7 @@
                 <button class="admin-btn" onclick="adminAction('heal_all')">Heal All Players</button>
                 <button class="admin-btn" onclick="adminAction('clear_powerups')">Clear All Powerups</button>
                 <button class="admin-btn" onclick="adminAction('respawn_all')">Respawn All</button>
-                <button class="admin-btn" onclick="adminSpawnBossA()" style="background:rgba(220,38,38,0.3);border-color:#dc2626;">⚠️ Spawn 💀 Boss A</button>
-                <button class="admin-btn" onclick="adminSpawnBossB()" style="background:rgba(180,20,200,0.3);border-color:#b414c8;">⚠️ Spawn 💀 Boss B</button>
+                <button class="admin-btn" onclick="adminSpawnBoss()" style="background:rgba(220,38,38,0.3);border-color:#dc2626;">⚠️ Force Spawn Boss</button>
             </div>
             <div class="admin-section">
                 <div class="admin-section-title">Toggles</div>
@@ -1176,14 +1175,6 @@
         })();
         const NPC_COLORS = { common:'#9ca3af', rare:'#3b82f6', epic:'#a855f7', legendary:'#f59e0b', mythic:'#ff00cc' };
         const NPC_RADII  = { common:18, rare:20, epic:23, legendary:27, mythic:32 };
-        function hexToRgba(hex, alpha) {
-            hex = (hex || '#ffffff').replace('#','');
-            if (hex.length === 3) hex = hex[0]+hex[0]+hex[1]+hex[1]+hex[2]+hex[2];
-            const r = parseInt(hex.substring(0,2),16);
-            const g = parseInt(hex.substring(2,4),16);
-            const b = parseInt(hex.substring(4,6),16);
-            return `rgba(${r},${g},${b},${alpha})`;
-        }
         let sbClient = null, currentUser = null, dbUsername = '', isAdmin = false;
         let socket = null, myId = null, isConnecting = false, connectionAttempts = 0;
         let powerupIdCounter = 10000, projectileIdCounter = 50000;
@@ -1780,20 +1771,9 @@
         function adminSpawnBoss() {
             if (!isAdmin || !socket) return;
             socket.emit('adminAnnouncement', { message: '⚠️ Admin is spawning the BOSS!' });
+            // Tell server to spawn boss immediately via a special emit
             socket.emit('adminSpawnBoss');
             showToast('Boss spawning!', 'admin');
-        }
-
-        function adminSpawnBossA() {
-            if (!isAdmin || !socket) return;
-            socket.emit('adminSpawnBossA');
-            showToast('💀 Boss A spawning!', 'admin');
-        }
-
-        function adminSpawnBossB() {
-            if (!isAdmin || !socket) return;
-            socket.emit('adminSpawnBossB');
-            showToast('💀 Boss B spawning!', 'admin');
         }
 
         function sendAnnouncement() {
@@ -1883,14 +1863,6 @@
         socket = null;
     });
 
-    socket.on('forceDisconnect', (data) => {
-        showToast(data.message || 'You were disconnected.', 'warning');
-        state.running = false;
-        socket.disconnect();
-        socket = null;
-        document.getElementById('main-menu').style.display = '';
-    });
-
     socket.on('joinSuccess', () => {
         clearTimeout(connectionTimeout);
         document.getElementById('main-menu').style.display = 'none';
@@ -1973,10 +1945,12 @@
                 state.me = data.player;
                 state.me.recoil = 0; state.me.poisoned = 0; state.me.frozen = 0;
                 state.me.kills = 0; state.me.isOmegaPower = false;
-                state.spawnProtection = 3.0;
+                state.spawnProtection = 3.0; // 3s invincibility on join
                 state.players = {};
                 Object.keys(data.players || {}).forEach(id => {
-                    if (id !== myId) { state.players[id] = data.players[id]; state.players[id].kills = 0; }
+                    if (id !== myId) {
+                        state.players[id] = { ...data.players[id], targetX: data.players[id].x, targetY: data.players[id].y, kills: 0 };
+                    }
                 });
                 state.projectiles = data.projectiles || {};
                 state.powerups = data.powerups || {};
@@ -2004,7 +1978,7 @@
                 }
             });
 
-            socket.on('playerJoined', p => { if (p.id !== myId) { state.players[p.id] = p; state.players[p.id].kills = 0; } });
+            socket.on('playerJoined', p => { if (p.id !== myId) { state.players[p.id] = { ...p, targetX: p.x, targetY: p.y, kills: 0 }; } });
             socket.on('playerLeft', id => { delete state.players[id]; delete state.remoteClones[id]; if (state.remoteBabies) delete state.remoteBabies[id]; });
 
             socket.on('playerMoved', (data) => {
@@ -2140,7 +2114,6 @@
                     const color = NPC_COLORS[data.rarity] || '#fff';
                     for (let i = 0; i < 30; i++) spawnParticles(n.x||data.x, n.y||data.y, 1, color);
                     state.explosions.push({ x: n.x||data.x, y: n.y||data.y, radius: 15, maxRadius: 80, life: 0.5, color });
-                    if (data.rarity === 'legendary' || data.rarity === 'mythic') showNpcAnnounce(data.rarity);
                 }
                 delete state.npcs[data.npcId];
                 if (data.drops) data.drops.forEach(d => { if (ALL_POWERS[d.type]) state.powerups[d.id] = d; });
@@ -2181,7 +2154,7 @@
             socket.on('playerHit', data => {
                 if (data.targetId === myId && state.me && !state.isDead) {
                     if (state.adminGodMode) return;
-                    if (state.spawnProtection > 0) return;
+                    if (state.spawnProtection > 0) return; // invincible after spawn
                     if (state.mirrorActive && data.attackerId) {
                         socket.emit('playerHit', { targetId: data.attackerId, damage: data.damage, attackerId: myId });
                         spawnParticles(state.me.x, state.me.y, 10, '#c0c0c0');
@@ -2574,7 +2547,7 @@
             state.mirrorActive = false; state.timestopActive = false;
             state.hitCooldowns = {};
             state.stamina = 100; state.staminaDepleted = false;
-            state.spawnProtection = 3.0;
+            state.spawnProtection = 3.0; // 3s invincibility after respawn
             updateInventoryUI(); updateScreenEffects();
             spawnParticles(state.me.x, state.me.y, 20, '#00f2fe');
             broadcastState();
@@ -2628,6 +2601,7 @@
 
         function update(dt) {
             if (!state.me) return;
+            // Spawn protection countdown
             if (state.spawnProtection > 0) state.spawnProtection = Math.max(0, state.spawnProtection - dt);
             // shootCooldown is now decremented in the movement section below
             if (state.me.poisoned > 0) {
@@ -2882,7 +2856,6 @@
                         targetSlot = state.activeSlot;
                     }
                     state.inventory[targetSlot] = powerType;
-                    // NEVER reset a slot's cooldown on pickup — cooldown stays until it expires naturally
                     state.me.currentPower = state.inventory[state.activeSlot];
                     state.me.isOmegaPower = isOmegaOrAdmin;
                     state.me.isMythicPower = !!(POWERS[powerType] && POWERS[powerType].rarity === 'mythic');
@@ -2968,10 +2941,11 @@
                 }
             }
 
-            // ── NPC: dt-based smooth lerp + hit detection ──────────────────
+            // ── NPC interpolation + hit detection (in update, not render) ──
             for (const npcId in state.npcs) {
                 const npc = state.npcs[npcId];
                 if (!npc) continue;
+                // Smooth movement using dt so NPCs glide instead of snap
                 if (npc.targetX !== undefined) {
                     npc.x = (npc.x !== undefined ? npc.x : npc.targetX);
                     npc.y = (npc.y !== undefined ? npc.y : npc.targetY);
@@ -2979,6 +2953,7 @@
                     npc.y += (npc.targetY - npc.y) * Math.min(1, dt * 8);
                 }
                 if (!npc.rarity || (npc.hp !== undefined && npc.hp <= 0)) continue;
+                // Hit detection — runs here so projectiles are guaranteed to be valid
                 for (const pid in state.projectiles) {
                     const proj = state.projectiles[pid];
                     if (!proj || proj.owner !== myId || proj.isRemote) continue;
@@ -2988,37 +2963,10 @@
                     if (hitDist < npcRadius + 10 && !state.hitCooldowns[hitKey]) {
                         state.hitCooldowns[hitKey] = Date.now();
                         const dmg = proj.damage || 20;
-                        npc.hp = Math.max(0, (npc.hp || 0) - dmg);
+                        npc.hp = Math.max(0, (npc.hp || 0) - dmg); // optimistic update
                         socket.emit('npcHit', { npcId, damage: dmg });
                         spawnParticles(npc.x, npc.y, 6, NPC_COLORS[npc.rarity] || '#fff');
                         spawnDamageNumber(npc.x, npc.y, dmg, 'damage');
-                        if (!proj.pierce) { delete state.projectiles[pid]; break; }
-                    }
-                }
-            }
-
-            // ── Boss: smooth lerp + hit detection ──────────────────────────
-            for (const bossId in state.bosses) {
-                const boss = state.bosses[bossId];
-                if (!boss) continue;
-                if (boss.targetX !== undefined) {
-                    boss.x = (boss.x !== undefined ? boss.x : boss.targetX);
-                    boss.y = (boss.y !== undefined ? boss.y : boss.targetY);
-                    boss.x += (boss.targetX - boss.x) * Math.min(1, dt * 6);
-                    boss.y += (boss.targetY - boss.y) * Math.min(1, dt * 6);
-                }
-                for (const pid in state.projectiles) {
-                    const proj = state.projectiles[pid];
-                    if (!proj || proj.owner !== myId || proj.isRemote) continue;
-                    const hitDist = Math.sqrt((boss.x - proj.x) ** 2 + (boss.y - proj.y) ** 2);
-                    const hitKey = `boss_${bossId}_${proj.id}`;
-                    if (hitDist < 50 && !state.hitCooldowns[hitKey]) {
-                        state.hitCooldowns[hitKey] = Date.now();
-                        const dmg = proj.damage || 20;
-                        boss.hp = Math.max(0, (boss.hp || 0) - dmg);
-                        socket.emit('bossHit', { bossId, damage: dmg, attackerId: myId });
-                        spawnParticles(boss.x, boss.y, 10, '#ff4444');
-                        spawnDamageNumber(boss.x, boss.y, dmg, 'damage');
                         if (!proj.pierce) { delete state.projectiles[pid]; break; }
                     }
                 }
@@ -3216,7 +3164,7 @@
             for (let ownerId in state.remoteClones) {
                 for (let clone of state.remoteClones[ownerId]) drawPlayer(clone, false, true);
             }
-            // Draw NPCs (interpolation + hit detection handled in update())
+            // Draw NPCs
             for (const npcId in state.npcs) {
                 const npc = state.npcs[npcId];
                 if (!npc || !npc.rarity || (npc.hp !== undefined && npc.hp <= 0)) continue;
@@ -3283,6 +3231,11 @@
             for (const bossId in state.bosses) {
                 const boss = state.bosses[bossId];
                 if (!boss) continue;
+                // Smooth movement
+                if (boss.targetX !== undefined) {
+                    boss.x = (boss.x || boss.targetX) + ((boss.targetX - (boss.x || boss.targetX)) * 0.15);
+                    boss.y = (boss.y || boss.targetY) + ((boss.targetY - (boss.y || boss.targetY)) * 0.15);
+                }
                 const bx = boss.x, by = boss.y;
                 const bHpPct = Math.max(0, (boss.hp || 0) / (boss.maxHp || 1000));
                 ctx.save();
@@ -3314,7 +3267,7 @@
                 ctx.translate(bx, by);
                 ctx.fillStyle = '#ff4444'; ctx.font = 'bold 18px Outfit'; ctx.textAlign = 'center';
                 ctx.shadowColor = '#000'; ctx.shadowBlur = 5;
-                ctx.fillText(`💀 Boss ${boss.label || ''}`, 0, -70);
+                ctx.fillText(`[BOSS] ${boss.label || ''}`, 0, -70);
                 ctx.font = 'bold 13px Outfit'; ctx.fillStyle = '#fbbf24';
                 ctx.fillText(`${Math.round(boss.hp || 0)} / ${boss.maxHp || 1000} HP`, 0, -53);
                 ctx.fillStyle = 'rgba(0,0,0,0.5)';
@@ -3322,7 +3275,20 @@
                 ctx.fillStyle = bHpPct > 0.5 ? '#ef4444' : (bHpPct > 0.25 ? '#f59e0b' : '#dc2626');
                 ctx.beginPath(); ctx.roundRect(-50, -45, 100 * bHpPct, 8, 4); ctx.fill();
                 ctx.restore();
-                // (Boss hit detection handled in update())
+                // Boss hit detection for projectiles
+                for (let id in state.projectiles) {
+                    const proj = state.projectiles[id];
+                    if (proj.owner !== myId || proj.isRemote) continue;
+                    const hitDist = Math.sqrt((bx - proj.x) ** 2 + (by - proj.y) ** 2);
+                    const hitKey = `boss_${bossId}_${proj.id}`;
+                    if (hitDist < 50 && !state.hitCooldowns[hitKey]) {
+                        state.hitCooldowns[hitKey] = Date.now();
+                        socket.emit('bossHit', { bossId, damage: proj.damage || 20, attackerId: myId });
+                        spawnParticles(bx, by, 10, '#ff4444');
+                        spawnDamageNumber(bx, by, proj.damage || 20, 'damage');
+                        if (!proj.pierce) delete state.projectiles[id];
+                    }
+                }
             }
 
             ctx.restore();
@@ -3499,9 +3465,9 @@
             if (npc.rarity === 'mythic' || npc.rarity === 'legendary') {
                 const auraR = r + 20 + Math.sin(Date.now()/200)*8;
                 const grad = ctx.createRadialGradient(0,0,r,0,0,auraR);
-                grad.addColorStop(0, hexToRgba(color, 0.35));
+                grad.addColorStop(0, color.replace(')', ',0.35)').replace('rgb','rgba').replace('#', 'rgba(').replace(/rgba\(([\da-f]{2})([\da-f]{2})([\da-f]{2}),/, (m,r,g,b) => 'rgba('+parseInt(r,16)+','+parseInt(g,16)+','+parseInt(b,16)+','));
                 grad.addColorStop(1, 'transparent');
-                ctx.fillStyle = hexToRgba(color, 0.27);
+                ctx.fillStyle = color + '44';
                 ctx.beginPath(); ctx.arc(0,0,auraR,0,Math.PI*2); ctx.fill();
             }
             // Body
@@ -3871,14 +3837,6 @@
             }
         }
 
-        function showNpcAnnounce(rarity) {
-            const el = document.getElementById('npc-announce');
-            if (!el) return;
-            const labels = { legendary: '[ LEGENDARY ] NPC defeated! Legendary loot dropped!', mythic: '[ MYTHIC ] NPC defeated! Mythic loot dropped!' };
-            el.textContent = labels[rarity] || '';
-            el.classList.add('visible');
-            setTimeout(() => el.classList.remove('visible'), 4000);
-        }
         // ──────────────────────────────────────────────────────────
 
         // Periodically clean up stale NPC hit cooldowns (older than 10s)
@@ -3909,6 +3867,20 @@
                     socket.emit('bossHit', { bossId, damage, attackerId: myId });
                     spawnParticles(b.x, b.y, 15, '#ff4444');
                     spawnDamageNumber(b.x, b.y, damage, 'damage');
+                }
+            }
+        }
+
+        function tryDamageNPCs(cx, cy, radius, damage) {
+            for (const npcId in state.npcs) {
+                const npc = state.npcs[npcId];
+                if (!npc || !npc.rarity || (npc.hp !== undefined && npc.hp <= 0)) continue;
+                const d = Math.sqrt((cx - npc.x)**2 + (cy - npc.y)**2);
+                if (d < radius) {
+                    npc.hp = Math.max(0, (npc.hp || 0) - damage);
+                    socket.emit('npcHit', { npcId, damage });
+                    spawnParticles(npc.x, npc.y, 6, '#ff4444');
+                    spawnDamageNumber(npc.x, npc.y, damage, 'damage');
                 }
             }
         }
@@ -4044,6 +4016,7 @@
                         socket.emit('abilityUsed', { type: 'poisontick', x: poisonX, y: poisonY, id: myId });
                         if (poisonInterval >= 8) clearInterval(poisonTick);
                         tryDamageBoss(poisonX, poisonY, 200, 6);
+                        tryDamageNPCs(poisonX, poisonY, 200, 6);
                     }, 300);
                     showToast('Poison Aura!', 'mythic'); used = true; break;
                 case 'laser':
@@ -4084,6 +4057,22 @@
                         }
                         // Laser also damages boss along its path
                         tryDamageBoss(laserStartX + Math.cos(laserAngle)*600, laserStartY + Math.sin(laserAngle)*600, 500, 8);
+                        // Laser damages NPCs along its path
+                        for (const npcId in state.npcs) {
+                            const npc = state.npcs[npcId];
+                            if (!npc || !npc.rarity || (npc.hp !== undefined && npc.hp <= 0)) continue;
+                            const ndx = npc.x - laserStartX, ndy = npc.y - laserStartY;
+                            const nt = ndx * Math.cos(laserAngle) + ndy * Math.sin(laserAngle);
+                            if (nt > 0 && nt < 1200) {
+                                const perpX = npc.x - (laserStartX + Math.cos(laserAngle)*nt);
+                                const perpY = npc.y - (laserStartY + Math.sin(laserAngle)*nt);
+                                if (Math.sqrt(perpX*perpX + perpY*perpY) < 30) {
+                                    npc.hp = Math.max(0, (npc.hp || 0) - 8);
+                                    socket.emit('npcHit', { npcId, damage: 8 });
+                                    spawnParticles(npc.x, npc.y, 3, '#ef4444');
+                                }
+                            }
+                        }
                         if (laserTick >= 8) clearInterval(laserFire);
                     }, 125);
                     showToast('LASER BEAM!', 'mythic'); used = true; break;
@@ -4112,6 +4101,7 @@
                             if (dist < 100) socket.emit('playerHit', { targetId: id, damage: 15, attackerId: myId });
                         }
                         tryDamageBoss(state.me.x, state.me.y, 130, 15);
+                        tryDamageNPCs(state.me.x, state.me.y, 130, 15);
                         state.explosions.push({ x: prevX, y: prevY, radius: 10, maxRadius: 80, life: 0.4, color: '#fb923c' });
                         broadcastState();
                         if (rocketStep >= 6) {
@@ -4150,6 +4140,7 @@
                         }
                     }
                     tryDamageBoss(state.me.x, state.me.y, 200, 25);
+                    tryDamageNPCs(state.me.x, state.me.y, 200, 25);
                     state.explosions.push({ x: state.me.x, y: state.me.y, radius: 30, maxRadius: 200, life: 0.5, color: '#8b5cf6' });
                     emitAbilityEffect('shockwave', state.me.x, state.me.y);
                     showToast('Shockwave!', 'mythic'); used = true; break;
@@ -4164,6 +4155,7 @@
                     spawnParticles(state.mouse.worldX, state.mouse.worldY, 40, '#4c1d95');
                     emitAbilityEffect('blackhole', state.mouse.worldX, state.mouse.worldY);
                     tryDamageBoss(state.mouse.worldX, state.mouse.worldY, 200, 30);
+                    tryDamageNPCs(state.mouse.worldX, state.mouse.worldY, 200, 30);
                     showToast('Blackhole!', 'mythic'); used = true; break;
                 case 'nuke':
                     for (let id in state.players) {
@@ -4173,6 +4165,7 @@
                         }
                     }
                     tryDamageBoss(state.me.x, state.me.y, 400, 70);
+                    tryDamageNPCs(state.me.x, state.me.y, 400, 70);
                     state.explosions.push({ x: state.me.x, y: state.me.y, radius: 50, maxRadius: 400, life: 1, color: '#dc2626' });
                     for (let i = 0; i < 60; i++) spawnParticles(state.me.x, state.me.y, 1, ['#dc2626', '#f59e0b', '#fbbf24'][Math.floor(Math.random() * 3)]);
                     emitAbilityEffect('nuke', state.me.x, state.me.y);
@@ -4182,6 +4175,7 @@
                     spawnParticles(state.me.x, state.me.y, 30, '#6366f1');
                     emitAbilityEffect('emp', state.me.x, state.me.y);
                     tryDamageBoss(state.me.x, state.me.y, 250, 20);
+                    tryDamageNPCs(state.me.x, state.me.y, 250, 20);
                     showToast('EMP!', 'mythic'); used = true; break;
                 case 'swap':
                     let nearest = null, nearestDist = 500;
@@ -4231,6 +4225,7 @@
                             }
                         }
                         tryDamageBoss(bombX, bombY, 250, 50);
+                        tryDamageNPCs(bombX, bombY, 250, 50);
                         for (let i = 0; i < 40; i++) spawnParticles(bombX, bombY, 1, '#ff6b00');
                         socket.emit('abilityUsed', { type: 'timebombexplode', x: bombX, y: bombY, id: myId, bombId });
                         // Remove from local timebombs
@@ -4261,6 +4256,7 @@
                             }
                         }
                         tryDamageBoss(targetX, targetY, 200, 70);
+                        tryDamageNPCs(targetX, targetY, 200, 70);
                     }, 1500);
                     showToast('Orbital strike incoming!', 'mythic'); used = true; break;
                 case 'shadowclone':
@@ -4278,6 +4274,7 @@
                             }
                         }
                         tryDamageBoss(shadowX, shadowY, 180, 45);
+                        tryDamageNPCs(shadowX, shadowY, 180, 45);
                     }, 1000);
                     showToast('Shadow decoy!', 'mythic'); used = true; break;
                 case 'frostnova':
@@ -4289,6 +4286,7 @@
                         }
                     }
                     tryDamageBoss(state.me.x, state.me.y, 300, 35);
+                    tryDamageNPCs(state.me.x, state.me.y, 300, 35);
                     for (let i = 0; i < 50; i++) {
                         const angle = (i / 50) * Math.PI * 2;
                         const dist = 50 + Math.random() * 250;
@@ -4331,6 +4329,7 @@
                         spawnDamageNumber(state.me.x, state.me.y, healAmount, 'heal');
                     }
                     tryDamageBoss(state.me.x, state.me.y, soulRadius, 35);
+                    tryDamageNPCs(state.me.x, state.me.y, soulRadius, 35);
                     showToast(`SOUL RIP! (${soulsCaught} souls torn)`, 'mythic'); used = true; break;
                 // NEW FUNCTIONAL POWERS
                 case 'gravitypull':
@@ -4356,6 +4355,7 @@
                     state.explosions.push({ x: state.me.x, y: state.me.y, radius: 50, maxRadius: pullRadius, life: 1, color: '#7c3aed' });
                     socket.emit('abilityUsed', { type: 'gravitypull', x: state.me.x, y: state.me.y, id: myId });
                     tryDamageBoss(state.me.x, state.me.y, pullRadius, 20);
+                    tryDamageNPCs(state.me.x, state.me.y, pullRadius, 20);
                     showToast('Gravity Pull!', 'mythic'); used = true; break;
                 case 'mirror':
                     // Reflect projectiles back at attackers
@@ -4392,6 +4392,7 @@
                     }
                     state.explosions.push({ x: chaosX, y: chaosY, radius: 30, maxRadius: 250, life: 1, color: '#ec4899' });
                     tryDamageBoss(chaosX, chaosY, 250, 45);
+                    tryDamageNPCs(chaosX, chaosY, 250, 45);
                     showToast('CHAOS ORB!', 'mythic'); used = true; break;
                 case 'lightning':
                     // Strike lightning at mouse position - doesn't damage self
@@ -4411,6 +4412,7 @@
                                 }
                             }
                             tryDamageBoss(boltX, boltY, 90, 35);
+                            tryDamageNPCs(boltX, boltY, 90, 35);
                         }, i * 120);
                     }
                     showToast('LIGHTNING STRIKE!', 'mythic'); used = true; break;
@@ -4446,6 +4448,7 @@
                     emitAbilityEffect('soulrip', state.me.x, state.me.y);
                     if (stolen > 0) spawnDamageNumber(state.me.x, state.me.y, stolen, 'heal');
                     tryDamageBoss(state.me.x, state.me.y, 350, 60);
+                    tryDamageNPCs(state.me.x, state.me.y, 350, 60);
                     showToast('SOUL STEAL! Life drained!', 'mythic'); used = true; break;
                 case 'phoenix':
                     showToast('Phoenix: You will auto-revive on death!', 'mythic'); return;
@@ -4744,6 +4747,7 @@
                                 if (Math.sqrt((bx-state.players[id].x)**2+(by-state.players[id].y)**2) < 120)
                                     socket.emit('playerHit', { targetId: id, damage: 30, attackerId: myId });
                             }
+                            tryDamageNPCs(bx, by, 120, 30);
                         }, bolt * 150);
                     }
                     showToast('STORM CALL', 'admin'); used = true; break;
@@ -4753,10 +4757,11 @@
                 state.speedActive = false; state.phaseActive = false; state.berserkerActive = false;
                 updatePowerUI(null); broadcastState();
             }
-            // All used powers damage the boss — admin powers hit much harder
+            // All used powers damage the boss and NPCs — admin powers hit much harder
             if (used) {
                 const isAdmin = ADMIN_POWERS[powerType];
                 tryDamageBoss(state.me.x, state.me.y, isAdmin ? 2000 : 300, isAdmin ? 150 : 25);
+                tryDamageNPCs(state.me.x, state.me.y, isAdmin ? 2000 : 300, isAdmin ? 150 : 25);
             }
         }
 
@@ -4785,7 +4790,7 @@
             socket.emit('dropPower', { type: droppedPower, x: state.powerups[dropId].x, y: state.powerups[dropId].y });
             spawnParticles(state.me.x, state.me.y, 10, powerInfo.color);
             state.inventory[state.activeSlot] = null;
-            // Do NOT reset slotCooldowns here — dropping and re-picking must not bypass cooldown
+            state.slotCooldowns[state.activeSlot] = 0;
             state.speedActive = false;
             state.phaseActive = false; state.berserkerActive = false;
             state.me.currentPower = state.inventory[state.activeSlot];
